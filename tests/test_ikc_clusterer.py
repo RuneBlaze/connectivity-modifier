@@ -5,7 +5,7 @@ from hm01.ikc_wrapper import IkcClusterer
 
 
 def test_basic_ikc_clustering_0():
-    data = nk.readGraph("./data/two_k4s.edge_list", nk.Format.EdgeListTabZero)
+    data = nk.readGraph("./data/two_k5s.edge_list", nk.Format.EdgeListTabZero)
     graph = Graph(data, "2a")
     k = 5
     clusterer_name = "IKC"
@@ -16,7 +16,7 @@ def test_basic_ikc_clustering_0():
     assert len(cluster_id_arr) == 0
 
 def test_basic_ikc_clustering_1():
-    data = nk.readGraph("./data/two_k4s.edge_list", nk.Format.EdgeListTabZero)
+    data = nk.readGraph("./data/two_k5s.edge_list", nk.Format.EdgeListTabZero)
     graph = Graph(data, "1b")
     k = 4
     clusterer_name = "IKC"
@@ -25,3 +25,5 @@ def test_basic_ikc_clustering_1():
     for current_graph in graph_arr:
         cluster_id_arr.remove(current_graph.index)
     assert len(cluster_id_arr) == 0
+    assert graph_arr[0].n() == 5
+    assert graph_arr[1].n() == 5
