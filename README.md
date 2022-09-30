@@ -2,9 +2,9 @@
 
 ```bash
 # poetry is a wrapper over virtual environments
-peotry install # install networkit and co
-peotry run pytest # run tests
-peotry run python3 file_path.py # run a file
+poetry install # install networkit and co
+poetry run pytest # run tests
+poetry run python3 file_path.py # run a file
 ```
 
 
