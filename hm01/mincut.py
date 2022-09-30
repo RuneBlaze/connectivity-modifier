@@ -1,0 +1,2 @@
+def viecut(graph):
+    pass
