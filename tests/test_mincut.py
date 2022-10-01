@@ -22,3 +22,10 @@ def test_cut_api(context):
         assert res.cut_size == cut_size
         assert len(res.light_partition) == light_size
         assert len(res.heavy_partition) == heavy_size
+
+def test_cut_correctness(context):
+    graph = Graph(nk.graphio.readGraph("data/ring_two_k5s.edge_list", nk.Format.EdgeListTabZero), "test")
+    res = graph.find_mincut()
+    assert res.cut_size == 2
+    assert set(res.light_partition) == set([0,1,2,3,4])
+    assert set(res.heavy_partition) == set([5,6,7,8,9])

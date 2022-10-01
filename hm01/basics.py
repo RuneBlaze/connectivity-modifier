@@ -54,14 +54,12 @@ class Graph:
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
         p = context.request_graph_related_path(self, "edgelist")
-        if not os.path.exists(p):
-            nk.graphio.writeGraph(self.data, p, nk.Format.EdgeListSpaceOne)
+        nk.graphio.writeGraph(self.data, p, nk.Format.EdgeListSpaceOne)
         return p
 
     def as_metis_filepath(self):
         """Get a filepath to the graph to a (continuous) METIS file"""
         p = context.request_graph_related_path(self, "metis")
-        if not os.path.exists(p):
-            nk.graphio.writeGraph(self.data, p, nk.Format.METIS)
+        nk.graphio.writeGraph(self.data, p, nk.Format.METIS)
         return p
 
