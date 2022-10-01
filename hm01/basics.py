@@ -27,7 +27,7 @@ class Graph:
         return self.data.numberOfEdges()
     
     def mcd(self):
-        return -1
+        return min(self.data.degree(n) for n in self.data.iterNodes())
     
     def find_clusters(self, clusterer) -> List[Graph]:
         """Find clusters using the given clusterer"""
@@ -36,6 +36,12 @@ class Graph:
     def find_mincut(self):
         """Find a mincut wrapped over Viecut"""
         return mincut.viecut(self)
+    
+    def cut_by_mincut(self, mincut_res) -> Tuple[Graph, Graph]:
+        """Cut the graph by the mincut result"""
+        light = self.induced_subgraph(mincut_res.light_partition, "a")
+        heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
+        return light, heavy
 
     def construct_hydrator(self):
         """Hydrator: a mapping from the compacted id to the original id"""
@@ -62,4 +68,15 @@ class Graph:
         p = context.request_graph_related_path(self, "metis")
         nk.graphio.writeGraph(self.data, p, nk.Format.METIS)
         return p
+    
+    def nodes(self):
+        """Iterate over the nodes"""
+        return self.data.iterNodes()
+    
+    @staticmethod
+    def from_space_edgelist(filepath: str, index=""):
+        return Graph(nk.graphio.readGraph(filepath, nk.Format.EdgeListSpaceZero), index)
 
+    @staticmethod
+    def from_erdos_renyi(n, p, index=""):
+        return Graph(nk.generators.ErdosRenyiGenerator(n, p).generate(), index)

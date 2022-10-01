@@ -1,4 +1,4 @@
 [tools]
-ikc_path = "third_party/ikc.py"
+ikc_path = "{project_root}/third_party/ikc.py"
 leiden_path = ""
 viecut_path = "/shared/viecut/mincut"

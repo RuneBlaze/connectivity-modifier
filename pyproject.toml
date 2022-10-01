@@ -12,6 +12,11 @@ pytest = "^7.1.3"
 numpy = "^1.23.3"
 typer = "^0.6.1"
 tomli = "^2.0.1"
+pandas = "^1.5.0"
+colorama = "^0.4.5"
+
+[tool.poetry.scripts]
+hm01 = 'hm01.cut_clusters:entry_point'
 
 [build-system]
 requires = ["poetry-core"]

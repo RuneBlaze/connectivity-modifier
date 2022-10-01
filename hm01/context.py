@@ -4,6 +4,7 @@ import os
 import atexit
 import shutil
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class Context:
     def __init__(self):
         self._working_dir = "hm01_working_dir"
@@ -19,15 +20,15 @@ class Context:
 
     @property
     def ikc_path(self):
-        return self.config["tools"]["ikc_path"]
+        return self.config["tools"]["ikc_path"].format(project_root=PROJECT_ROOT)
 
     @property
     def leiden_path(self):
-        return self.config["tools"]["leiden_path"]
+        return self.config["tools"]["leiden_path"].format(project_root=PROJECT_ROOT)
     
     @property
     def viecut_path(self):
-        return self.config["tools"]["viecut_path"]
+        return self.config["tools"]["viecut_path"].format(project_root=PROJECT_ROOT)
     
     @cached_property
     def config(self):
