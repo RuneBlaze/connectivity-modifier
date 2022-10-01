@@ -3,7 +3,6 @@ import networkit as nk
 from hm01.basics import *
 from hm01.ikc_wrapper import IkcClusterer
 
-
 def test_basic_ikc_clustering_0(context):
     data = nk.readGraph("./data/two_k5s.edge_list", nk.Format.EdgeListTabZero)
     graph = Graph(data, "2a")

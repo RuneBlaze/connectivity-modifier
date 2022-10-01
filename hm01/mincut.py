@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+import coloredlogs, logging
 from typing import List, Tuple
 from .context import context
 import subprocess
 import re
 import os
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class MincutResult:
@@ -20,7 +23,7 @@ def viecut(graph):
 def run_viecut_command(metis_path, output_path, hydrator=None):
     """Run the viecut command and return the output path"""
     cmd = [context.viecut_path, "-b", "-s", "-o", output_path, metis_path, "cactus"]
-    print(cmd)
+    logger.debug(f"Running viecut command: {' '.join(cmd)}")
     res = subprocess.run(cmd, capture_output=True)
     if "has multiple connected components" in res.stdout.decode("utf-8"):
         return MincutResult([], [], 0)

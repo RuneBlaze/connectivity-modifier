@@ -7,9 +7,13 @@ import math
 from collections import deque
 from hm01.basics import Graph
 from hm01.leiden_wrapper import LeidenClusterer
+import coloredlogs, logging
 import networkit as nk
 from .ikc_wrapper import IkcClusterer
 from .context import context
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(level="DEBUG", logger=logger)
 
 
 class ClustererSpec(str, Enum):
@@ -31,12 +35,12 @@ class MincutRequirement:
         if not isinstance(clusterer, IkcClusterer):
             return self.k == 0
         return True
-
-    def decide_validity(self, clusterer, cluster, mincut_res):
+    
+    def validity_threshold(self, clusterer, cluster):
         log10 = math.log10(cluster.n())
         mcd = cluster.mcd()
         k = clusterer.k if isinstance(clusterer, IkcClusterer) else 0
-        return self.log10 * log10 + self.mcd * mcd + self.k * k >= mincut_res.cut_size
+        return self.log10 * log10 + self.mcd * mcd + self.k * k
 
     @staticmethod
     def most_stringent() -> MincutRequirement:
@@ -94,7 +98,9 @@ def algorithm_g(
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
 ) -> Tuple[List[Graph], Dict[int, str]]:
+    logger.info("Starting algorithm-g")
     queue = deque(graphs)
+    logger.info("Initially having %d subgraphs", len(queue))
     ans = []
     node2cids = {}
     while queue:
@@ -106,18 +112,25 @@ def algorithm_g(
             continue
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
-        is_cut_valid = requirement.decide_validity(clusterer, graph, mincut_res)
-        if not is_cut_valid:
+        valid_threshold = requirement.validity_threshold(clusterer, graph)
+        logger.debug("Valid threshold (ID=%s): %f", graph.index, valid_threshold)
+        logger.debug("Mincut result (ID=%s): light side=%d heavy side=%d cut size=%d", graph.index, len(mincut_res.light_partition), len(mincut_res.heavy_partition), mincut_res.cut_size)
+        if mincut_res.cut_size <= valid_threshold:
             p1, p2 = graph.cut_by_mincut(mincut_res)
-            queue.append(p1)
-            queue.append(p2)
+            subp1 = clusterer.cluster(p1)
+            subp2 = clusterer.cluster(p2)
+            queue.extend(subp1)
+            queue.extend(subp2)
+            logger.info("Split (ID=%s): into %s and %s", graph.index, ', '.join([g.index for g in subp1]), ', '.join([g.index for g in subp2]))
         else:
             ans.append(graph)
+            logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
     return ans, node2cids
 
 
 def main(
     input: str = typer.Option(..., "--input", "-i"),
+    working_dir: Optional[str] = typer.Option("", "--working-dir", "-d"),
     clusterer: ClustererSpec = typer.Option(..., "--clusterer", "-c"),
     k: int = typer.Option(-1, "--k", "-k"),
     resolution: float = typer.Option(-1, "--resolution", "-g"),
@@ -130,8 +143,10 @@ def main(
     else:
         assert k != -1
         clusterer = IkcClusterer(k)
-    context.with_working_dir(input + "_working_dir")
+    context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
+    logger.info(f"Loading graph from {input} with working directory {context.working_dir}")
     requirement = MincutRequirement.try_from_str(threshold)
+    logger.info(f"Connectivity requirement: {requirement}")
     edgelist_reader = nk.graphio.EdgeListReader('\t',0)
     nk_graph = edgelist_reader.read(input)
     root_graph = Graph(nk_graph, "")
