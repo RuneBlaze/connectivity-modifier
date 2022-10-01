@@ -6,17 +6,16 @@ from typing import List
 import networkit as nk
 
 from .basics import Graph
-from .context import Config
+from .context import context
 
 @dataclass
 class IkcClusterer:
     k: int
-    clusterer_name: str
 
     def cluster(self, graph) -> List[Graph]:
         """Returns a list of (labeled) subgraphs on the graph"""
         retarr = []
-        output_prefix = Config.working_directory % self.clusterer_name
+        output_prefix = context.request_graph_related_path(graph, "ikc")
         Path(output_prefix).mkdir(exist_ok=True) # should create a directory like "IKC_working_directory)
 
         global_name_networkit_graph = graph.data # the networkit graph with non-translated node ids
@@ -47,8 +46,7 @@ class IkcClusterer:
 
     def run_ikc(self, edge_list_path, cluster_id, output_prefix, output_file):
         """Runs IKC given an edge list and writes a CSV"""
-        ikc_path = Config.ikc_path
-        ikc_path = "/home/minhyuk2/git_repos/ERNIE_Plus/Illinois/clustering/eleanor/code/IKC.py"
+        ikc_path = context.ikc_path
         with open(f"{output_prefix}/{cluster_id}_ikc_k={self.k}.stderr", "w") as f_err:
             with open(f"{output_prefix}/{cluster_id}_ikc_k={self.k}.stdout", "w") as f_out:
                 subprocess.run(["/usr/bin/time", "-v", "/usr/bin/env", "python3", ikc_path, "-e", edge_list_path, "-o", output_file, "-k", str(self.k)])
