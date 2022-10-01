@@ -6,7 +6,7 @@ from typing import List
 import networkit as nk
 
 from .basics import Graph
-from .config import Config
+from .context import Config
 
 @dataclass
 class IkcClusterer:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import networkit as nk
 from typing import List, Tuple
-# from hm01.mincut import viecut
 from . import mincut
 
 class Graph:
@@ -9,6 +9,7 @@ class Graph:
     def __init__(self, data, index):
         self.data = data # nk graph
         self.index = index
+        self.construct_hydrator()
     
     @staticmethod
     def from_nk(graph, index = ""):
@@ -33,6 +34,26 @@ class Graph:
     def find_mincut(self):
         """Find a mincut wrapped over Viecut"""
         # TODO: Baqiao implement this
+        pass
+
+    def construct_hydrator(self):
+        """Hydrator: a mapping from the compacted id to the original id"""
+        n = self.n()
+        hydrator = [0] * n
+        for old_id, new_id in nk.graphtools.getContinuousNodeIds(self.data).items():
+            hydrator[new_id] = old_id
+        self.hydrator = hydrator
+
+    def induced_subgraph(self, ids, suffix):
+        assert suffix != "", "Suffix cannot be empty"
+        data = nk.graphtools.subgraphFromNodes(self.data, ids)
+        index = self.index + suffix
+        return Graph(data, index)
+    
+    def as_edgelist_filepath(self):
+        pass
+
+    def as_metis_filepath(self):
         pass
 
 @dataclass
