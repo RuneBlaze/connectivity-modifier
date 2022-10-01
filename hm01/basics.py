@@ -2,7 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import networkit as nk
 from typing import List, Tuple
+import os
 from . import mincut
+from .context import context
 
 class Graph:
     """Wrapped graph over a networkit graph with an ID label"""
@@ -50,18 +52,17 @@ class Graph:
         index = self.index + suffix
         return Graph(data, index)
     
-    def as_edgelist_filepath(self):
-        pass
+    def as_compact_edgelist_filepath(self):
+        """Get a filepath to the graph as a compact/continuous edgelist file"""
+        p = context.request_graph_related_path(self, "edgelist")
+        if not os.path.exists(p):
+            nk.graphio.writeGraph(self.data, p, nk.Format.EdgeListSpaceOne)
+        return p
 
     def as_metis_filepath(self):
-        pass
+        """Get a filepath to the graph to a (continuous) METIS file"""
+        p = context.request_graph_related_path(self, "metis")
+        if not os.path.exists(p):
+            nk.graphio.writeGraph(self.data, p, nk.Format.METIS)
+        return p
 
-@dataclass
-class MincutResult:
-    light_partition : List[int] # 0 labeled nodes
-    heavy_partition : List[int] # 1 labeled nodes
-    cut_size : int
-
-    def realize(self, graph) -> Tuple[Graph, Graph]:
-        """Realize the mincut result as a pair of graphs"""
-        pass

@@ -1,12 +1,20 @@
 from functools import cached_property
 from tomli import load
 import os
+import atexit
+import shutil
+
 class Context:
     def __init__(self):
         self._working_dir = "hm01_working_dir"
+        self.transient = False
     
     def with_working_dir(self, working_dir):
         self._working_dir = working_dir
+        return self
+    
+    def as_transient(self):
+        self.transient = True
         return self
 
     @property
@@ -34,7 +42,15 @@ class Context:
     def working_dir(self):
         if not os.path.exists(self._working_dir):
             os.mkdir(self._working_dir)
+        else:
+            if self.transient:
+                raise Exception("Working directory already exists under transient mode")
+        if self.transient:
+            atexit.register(lambda: shutil.rmtree(self._working_dir))
         return self._working_dir
+
+    def request_graph_related_path(self, graph, suffix):
+        return os.path.join(self.working_dir, graph.index + '.' + suffix)
 
 # we export the context as a singleton
 context = Context()
