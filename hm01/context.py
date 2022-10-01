@@ -25,6 +25,10 @@ class Context:
     def leiden_path(self):
         return self.config["tools"]["leiden_path"]
     
+    @property
+    def viecut_path(self):
+        return self.config["tools"]["viecut_path"]
+    
     @cached_property
     def config(self):
         lookup_paths = [

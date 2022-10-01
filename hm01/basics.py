@@ -35,8 +35,7 @@ class Graph:
     
     def find_mincut(self):
         """Find a mincut wrapped over Viecut"""
-        # TODO: Baqiao implement this
-        pass
+        return mincut.viecut(self)
 
     def construct_hydrator(self):
         """Hydrator: a mapping from the compacted id to the original id"""

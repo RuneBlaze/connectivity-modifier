@@ -1,3 +1,4 @@
 [tools]
 ikc_path = "/home/minhyuk2/git_repos/ERNIE_Plus/Illinois/clustering/eleanor/code/IKC.py"
 leiden_path = ""
+viecut_path = "/shared/viecut/mincut"
