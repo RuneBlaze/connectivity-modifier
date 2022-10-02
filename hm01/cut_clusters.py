@@ -4,6 +4,7 @@ import typer
 from enum import Enum
 from typing import List, Optional, Tuple, Union, Dict
 import math
+import time
 from collections import deque
 from hm01.basics import Graph
 from hm01.leiden_wrapper import LeidenClusterer
@@ -137,6 +138,7 @@ def main(
     threshold: str = typer.Option("", "--threshold", "-t"),
     output: Optional[str] = typer.Option(None, "--output", "-o"),
 ):
+    """Take a network and cluster it ensuring cut validity"""
     if clusterer == ClustererSpec.leiden:
         assert resolution != -1
         clusterer = LeidenClusterer(resolution)
@@ -147,10 +149,13 @@ def main(
     logger.info(f"Loading graph from {input} with working directory {context.working_dir}")
     requirement = MincutRequirement.try_from_str(threshold)
     logger.info(f"Connectivity requirement: {requirement}")
+    time1 = time.time()
     edgelist_reader = nk.graphio.EdgeListReader('\t',0)
     nk_graph = edgelist_reader.read(input)
+    logger.info(f"Loaded graph with {nk_graph.numberOfNodes()} nodes and {nk_graph.numberOfEdges()} edges in {time.time() - time1:.2f} seconds")
     root_graph = Graph(nk_graph, "")
-    clusters = clusterer.cluster(root_graph)
+    logger.info(f"Running first round of clustering before handing to algorithm-g")
+    clusters = root_graph.find_clusters(clusterer)
     new_clusters, labels = algorithm_g(clusters, clusterer, requirement)
     if output:
         with open(output, "w") as f:

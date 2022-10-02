@@ -1,10 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import logging
 import networkit as nk
 from typing import List, Tuple
 import os
 from . import mincut
 from .context import context
+
+logger = logging.getLogger(__name__)
 
 class Graph:
     """Wrapped graph over a networkit graph with an ID label"""
@@ -31,6 +34,7 @@ class Graph:
     
     def find_clusters(self, clusterer) -> List[Graph]:
         """Find clusters using the given clusterer"""
+        logger.info(f"Finding clusters (ID={self.index}) (n={self.n()}) (m={self.m()})")
         return clusterer.cluster(self)
     
     def find_mincut(self):
