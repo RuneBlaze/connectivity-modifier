@@ -1,5 +1,12 @@
 ## Setup
 
+Running the command
+
+```shell
+poetry install # install the hm01 script in PATH
+hm01 -i /srv/local/shared/external/dbid/george/exosome_dimensions_wedell_retraction-depleted_jc250-corrected_no_header.tsv -c ikc -k 10 -t 0.1mcd -d working_dir -o clusters.txt
+```
+
 ```bash
 # poetry is a wrapper over virtual environments
 poetry install # install networkit and co
