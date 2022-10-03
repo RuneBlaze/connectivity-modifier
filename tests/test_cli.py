@@ -14,7 +14,7 @@ def test_mincut_requirement_parsing():
 def test_simple_algorithm_g(context):
     graph = Graph.from_erdos_renyi(100, 0.3)
     clusterer = IkcClusterer(10)
-    clusters = clusterer.cluster(graph)
-    clusters, label_mapping = algorithm_g(clusters, clusterer, MincutRequirement.most_stringent())
+    clusters = list(clusterer.cluster(graph))
+    clusters, label_mapping = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())
     assert len(clusters) > 0
     assert len(label_mapping) == 100

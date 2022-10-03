@@ -8,6 +8,14 @@ def test_basic_graph_wrapping():
     assert graph.m() > 0
     assert 100 > graph.mcd() > 50
 
+def test_graph_intangible():
+    data = nk.generators.ErdosRenyiGenerator(100, 0.99).generate()
+    graph = Graph.from_nk(data)
+    sg_intangible = graph.intangible_subgraph([5,7,9,11,13,15], 'a')
+    assert sg_intangible.n() == 6
+    assert sg_intangible.realize().n() == 6
+    assert sg_intangible.realize().to_intangible(graph) == sg_intangible
+
 def test_basic_subgraph_construction():
     data = nk.generators.ErdosRenyiGenerator(100, 0.99).generate()
     graph = Graph.from_nk(data)

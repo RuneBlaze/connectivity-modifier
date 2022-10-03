@@ -2,11 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import typer
 from enum import Enum
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple, Union, Dict, Deque
 import math
 import time
 from collections import deque
-from hm01.basics import Graph
+from hm01.basics import Graph, IntangibleSubgraph
 from hm01.leiden_wrapper import LeidenClusterer
 import coloredlogs, logging
 import networkit as nk
@@ -14,13 +14,12 @@ from .ikc_wrapper import IkcClusterer
 from .context import context
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 coloredlogs.install(level="DEBUG", logger=logger)
-
 
 class ClustererSpec(str, Enum):
     leiden = "leiden"
     ikc = "ikc"
-
 
 @dataclass
 class MincutRequirement:
@@ -95,17 +94,18 @@ class MincutRequirement:
         return MincutRequirement(log10, mcd, k, constant)
 
 def algorithm_g(
-    graphs: List[Graph],
+    global_graph: Graph,
+    graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
 ) -> Tuple[List[Graph], Dict[int, str]]:
     logger.info("Starting algorithm-g")
-    queue = deque(graphs)
+    queue : Deque[IntangibleSubgraph] = deque(graphs)
     logger.info("Initially having %d subgraphs", len(queue))
     ans = []
     node2cids = {}
     while queue:
-        graph = queue.popleft()
+        graph = queue.popleft().realize()
         for n in graph.nodes():
             node2cids[n] = graph.index
         if graph.n() <= 1:
@@ -124,7 +124,7 @@ def algorithm_g(
             queue.extend(subp2)
             logger.info("Split (ID=%s): into %s and %s", graph.index, ', '.join([g.index for g in subp1]), ', '.join([g.index for g in subp2]))
         else:
-            ans.append(graph)
+            ans.append(graph.to_intangible(global_graph))
             logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
     return ans, node2cids
 
@@ -155,8 +155,8 @@ def main(
     logger.info(f"Loaded graph with {nk_graph.numberOfNodes()} nodes and {nk_graph.numberOfEdges()} edges in {time.time() - time1:.2f} seconds")
     root_graph = Graph(nk_graph, "")
     logger.info(f"Running first round of clustering before handing to algorithm-g")
-    clusters = root_graph.find_clusters(clusterer)
-    new_clusters, labels = algorithm_g(clusters, clusterer, requirement)
+    clusters = list(root_graph.find_clusters(clusterer))
+    new_clusters, labels = algorithm_g(root_graph, clusters, clusterer, requirement)
     if output:
         with open(output, "w") as f:
             for n, cid in labels.items():

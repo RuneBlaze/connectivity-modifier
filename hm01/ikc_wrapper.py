@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 import subprocess
-from typing import List
+from typing import List, Iterator
 
 import networkit as nk
 
@@ -12,9 +12,9 @@ from .context import context
 class IkcClusterer:
     k: int
 
-    def cluster(self, graph) -> List[Graph]:
+    def cluster(self, graph) -> Iterator[Graph]:
         """Returns a list of (labeled) subgraphs on the graph"""
-        retarr = []
+        # retarr = []
         output_prefix = context.request_graph_related_path(graph, "ikc")
         Path(output_prefix).mkdir(exist_ok=True) # should create a directory like "IKC_working_directory)
 
@@ -39,10 +39,8 @@ class IkcClusterer:
         for local_cluster_id,local_cluster_member_arr in cluster_to_id_dict.items():
             global_cluster_id = f"{cluster_id}{local_cluster_id}"
             global_cluster_member_arr = [int(new_to_old_node_id_mapping[local_id]) for local_id in local_cluster_member_arr]
-            local_name_current_cluster_networkit_subgraph = nk.graphtools.subgraphFromNodes(global_name_networkit_graph, global_cluster_member_arr)
-            current_cluster_graph = Graph(local_name_current_cluster_networkit_subgraph, global_cluster_id)
-            retarr.append(current_cluster_graph)
-        return retarr
+            yield graph.intangible_subgraph(global_cluster_member_arr, str(local_cluster_id))
+        # return retarr
 
     def run_ikc(self, edge_list_path, cluster_id, output_prefix, output_file):
         """Runs IKC given an edge list and writes a CSV"""
