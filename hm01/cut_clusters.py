@@ -10,6 +10,8 @@ from hm01.basics import Graph, IntangibleSubgraph
 from hm01.leiden_wrapper import LeidenClusterer
 import coloredlogs, logging
 import networkit as nk
+
+from hm01.types import AbstractCluterer
 from .ikc_wrapper import IkcClusterer
 from .context import context
 
@@ -106,18 +108,18 @@ def algorithm_g(
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
-) -> Tuple[List[Graph], Dict[int, str]]:
+) -> Tuple[List[IntangibleSubgraph], Dict[int, str]]:
     logger.info("Starting algorithm-g")
     queue : Deque[IntangibleSubgraph] = deque(graphs)
     logger.info("Initially having %d subgraphs", len(queue))
     ans = []
     node2cids = {}
     while queue:
-        graph = queue.popleft().realize()
+        graph = queue.popleft().realize(global_graph)
         for n in graph.nodes():
             node2cids[n] = graph.index
         if graph.n() <= 1:
-            ans.append(graph)
+            ans.append(graph.to_intangible(global_graph))
             continue
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
@@ -134,22 +136,23 @@ def algorithm_g(
         else:
             ans.append(graph.to_intangible(global_graph))
             logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
+        del graph.data
     return ans, node2cids
 
 
 def main(
     input: str = typer.Option(..., "--input", "-i"),
     working_dir: Optional[str] = typer.Option("", "--working-dir", "-d"),
-    clusterer: ClustererSpec = typer.Option(..., "--clusterer", "-c"),
+    clusterer_spec: ClustererSpec = typer.Option(..., "--clusterer", "-c"),
     k: int = typer.Option(-1, "--k", "-k"),
     resolution: float = typer.Option(-1, "--resolution", "-g"),
     threshold: str = typer.Option("", "--threshold", "-t"),
     output: Optional[str] = typer.Option(None, "--output", "-o"),
 ):
     """Take a network and cluster it ensuring cut validity"""
-    if clusterer == ClustererSpec.leiden:
+    if clusterer_spec == ClustererSpec.leiden:
         assert resolution != -1
-        clusterer = LeidenClusterer(resolution)
+        clusterer : Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
     else:
         assert k != -1
         clusterer = IkcClusterer(k)

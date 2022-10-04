@@ -32,7 +32,7 @@ class Graph:
     def mcd(self):
         return min(self.data.degree(n) for n in self.data.iterNodes())
     
-    def find_clusters(self, clusterer) -> Iterator[Graph]:
+    def find_clusters(self, clusterer) -> Iterator[IntangibleSubgraph]:
         """Find clusters using the given clusterer"""
         logger.info(f"Finding clusters (ID={self.index}) (n={self.n()}) (m={self.m()})")
         return clusterer.cluster(self)
@@ -62,7 +62,7 @@ class Graph:
         return Graph(data, index)
     
     def intangible_subgraph(self, nodes, suffix):
-        return IntangibleSubgraph(self, nodes, self.index + suffix)
+        return IntangibleSubgraph(nodes, self.index + suffix)
     
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
@@ -89,18 +89,17 @@ class Graph:
         return Graph(nk.generators.ErdosRenyiGenerator(n, p).generate(), index)
     
     def to_intangible(self, graph):
-        return IntangibleSubgraph(graph, list(self.nodes()), self.index)
+        return IntangibleSubgraph(list(self.nodes()), self.index)
 
 @dataclass
 class IntangibleSubgraph():
     """A yet to be realized subgraph, containing only the node ids"""
-    graph : Graph
     nodes : List[int]
     index : str
 
-    def realize(self) -> Graph:
+    def realize(self, graph) -> Graph:
         """Realize the subgraph"""
-        return self.graph.induced_subgraph(self.nodes, self.index)
+        return graph.induced_subgraph(self.nodes, self.index)
 
     def __len__(self):
         return len(self.nodes)

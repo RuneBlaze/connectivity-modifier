@@ -5,14 +5,16 @@ from typing import List, Iterator
 
 import networkit as nk
 
-from .basics import Graph
+from hm01.types import AbstractCluterer
+
+from .basics import Graph, IntangibleSubgraph
 from .context import context
 
 @dataclass
-class IkcClusterer:
+class IkcClusterer(AbstractCluterer):
     k: int
 
-    def cluster(self, graph) -> Iterator[Graph]:
+    def cluster(self, graph) -> Iterator[IntangibleSubgraph]:
         """Returns a list of (labeled) subgraphs on the graph"""
         # retarr = []
         output_prefix = context.request_graph_related_path(graph, "ikc")

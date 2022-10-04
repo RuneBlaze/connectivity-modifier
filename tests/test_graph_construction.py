@@ -13,8 +13,8 @@ def test_graph_intangible():
     graph = Graph.from_nk(data)
     sg_intangible = graph.intangible_subgraph([5,7,9,11,13,15], 'a')
     assert sg_intangible.n() == 6
-    assert sg_intangible.realize().n() == 6
-    assert sg_intangible.realize().to_intangible(graph) == sg_intangible
+    assert sg_intangible.realize(graph).n() == 6
+    assert sg_intangible.realize(graph).to_intangible(graph) == sg_intangible
 
 def test_basic_subgraph_construction():
     data = nk.generators.ErdosRenyiGenerator(100, 0.99).generate()
