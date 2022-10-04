@@ -1,17 +1,23 @@
-## Setup
+# hm01
 
-Running the command
+Early stage clusterer ensuring cut-validity.
+
+## Installation
+
+We use [poetry](https://python-poetry.org/) to manage the project, so it has to be first installed.
 
 ```shell
+# clone the repo, and cd into the repo
 poetry install # install the hm01 script in PATH
 hm01 -i /srv/local/shared/external/dbid/george/exosome_dimensions_wedell_retraction-depleted_jc250-corrected_no_header.tsv -c ikc -k 10 -t 0.1mcd -d working_dir -o clusters.txt
 ```
+
+## Development
 
 ```bash
 # poetry is a wrapper over virtual environments
 poetry install # install networkit and co
 poetry run pytest # run tests
-poetry run python3 file_path.py # run a file
 ```
 
 
