@@ -93,6 +93,14 @@ class MincutRequirement:
             k = vals["k"]
         return MincutRequirement(log10, mcd, k, constant)
 
+def summarize_graphs(graphs : List[IntangibleSubgraph]) -> str:
+    if not graphs:
+        return "[](empty)"
+    if len(graphs) > 3:
+        return f"[{graphs[0].index}, ..., {graphs[-1].index}]({len(graphs)})"
+    else:
+        return f"[{', '.join([g.index for g in graphs])}]({len(graphs)})"
+
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
@@ -118,11 +126,11 @@ def algorithm_g(
         logger.debug("Mincut result (ID=%s): light side=%d heavy side=%d cut size=%d", graph.index, len(mincut_res.light_partition), len(mincut_res.heavy_partition), mincut_res.cut_size)
         if mincut_res.cut_size <= valid_threshold:
             p1, p2 = graph.cut_by_mincut(mincut_res)
-            subp1 = clusterer.cluster(p1)
-            subp2 = clusterer.cluster(p2)
+            subp1 = list(clusterer.cluster(p1))
+            subp2 = list(clusterer.cluster(p2))
             queue.extend(subp1)
             queue.extend(subp2)
-            logger.info("Split (ID=%s): into %s and %s", graph.index, ', '.join([g.index for g in subp1]), ', '.join([g.index for g in subp2]))
+            logger.info("Clusters split (ID=%s): into %s and %s", graph.index, summarize_graphs(subp1), summarize_graphs(subp2))
         else:
             ans.append(graph.to_intangible(global_graph))
             logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
