@@ -17,4 +17,3 @@ def test_simple_algorithm_g(context):
     clusters = list(clusterer.cluster(graph))
     clusters, label_mapping = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())
     assert len(clusters) > 0
-    assert len(label_mapping) == 100

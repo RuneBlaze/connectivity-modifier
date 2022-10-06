@@ -115,21 +115,24 @@ def algorithm_g(
     ans = []
     node2cids = {}
     while queue:
-        graph = queue.popleft().realize(global_graph)
+        logger.debug("Queue size: %d", len(queue))
+        intangible_graph = queue.popleft()
+        logger.debug("Popped graph with size %d with index %s", intangible_graph.n(), intangible_graph.index)
+        if intangible_graph.n() <= 1:
+            ans.append(intangible_graph)
+            continue
+        graph = intangible_graph.realize(global_graph)
         for n in graph.nodes():
             node2cids[n] = graph.index
-        if graph.n() <= 1:
-            ans.append(graph.to_intangible(global_graph))
-            continue
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
         valid_threshold = requirement.validity_threshold(clusterer, graph)
         logger.debug("Valid threshold (ID=%s): %f", graph.index, valid_threshold)
         logger.debug("Mincut result (ID=%s): light side=%d heavy side=%d cut size=%d", graph.index, len(mincut_res.light_partition), len(mincut_res.heavy_partition), mincut_res.cut_size)
-        if mincut_res.cut_size <= valid_threshold:
+        if mincut_res.cut_size <= valid_threshold and mincut_res.cut_size > 0:
             p1, p2 = graph.cut_by_mincut(mincut_res)
-            subp1 = list(clusterer.cluster(p1))
-            subp2 = list(clusterer.cluster(p2))
+            subp1 = list(clusterer.cluster_without_singletons(p1))
+            subp2 = list(clusterer.cluster_without_singletons(p2))
             queue.extend(subp1)
             queue.extend(subp2)
             logger.info("Clusters split (ID=%s): into %s and %s", graph.index, summarize_graphs(subp1), summarize_graphs(subp2))
@@ -137,6 +140,7 @@ def algorithm_g(
             ans.append(graph.to_intangible(global_graph))
             logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
         del graph.data
+        logger.debug("Queue size (at end): %d", len(queue))
     return ans, node2cids
 
 
@@ -166,7 +170,8 @@ def main(
     logger.info(f"Loaded graph with {nk_graph.numberOfNodes()} nodes and {nk_graph.numberOfEdges()} edges in {time.time() - time1:.2f} seconds")
     root_graph = Graph(nk_graph, "")
     logger.info(f"Running first round of clustering before handing to algorithm-g")
-    clusters = list(root_graph.find_clusters(clusterer))
+    clusters = list(clusterer.cluster_without_singletons(root_graph))
+    logger.info(f"First round of clustering done, got {len(clusters)} clusters")
     new_clusters, labels = algorithm_g(root_graph, clusters, clusterer, requirement)
     if output:
         with open(output, "w") as f:

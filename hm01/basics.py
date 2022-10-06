@@ -51,7 +51,9 @@ class Graph:
         """Hydrator: a mapping from the compacted id to the original id"""
         n = self.n()
         hydrator = [0] * n
-        for old_id, new_id in nk.graphtools.getContinuousNodeIds(self.data).items():
+        continuous_ids = nk.graphtools.getContinuousNodeIds(self.data).items()
+        assert len(continuous_ids) == n
+        for old_id, new_id in continuous_ids:
             hydrator[new_id] = old_id
         self.hydrator = hydrator
 
@@ -61,8 +63,14 @@ class Graph:
         index = self.index + suffix
         return Graph(data, index)
     
+    def induced_subgraph_from_compact(self, ids, suffix):
+        return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
+    
     def intangible_subgraph(self, nodes, suffix):
         return IntangibleSubgraph(nodes, self.index + suffix)
+
+    def intangible_subgraph_from_compact(self, ids, suffix):
+        return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
     
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
@@ -90,6 +98,13 @@ class Graph:
     
     def to_intangible(self, graph):
         return IntangibleSubgraph(list(self.nodes()), self.index)
+    
+    def to_igraph(self):
+        import igraph as ig
+        cont_ids = nk.graphtools.getContinuousNodeIds(self.data)
+        compact_graph = nk.graphtools.getCompactedGraph(self.data, cont_ids)
+        edges = [(u, v) for u, v in compact_graph.iterEdges()]
+        return ig.Graph(self.n(), edges)
 
 @dataclass
 class IntangibleSubgraph():
