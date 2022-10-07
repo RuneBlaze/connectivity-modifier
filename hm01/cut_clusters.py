@@ -8,28 +8,27 @@ import time
 from collections import deque
 from hm01.basics import Graph, IntangibleSubgraph
 from hm01.leiden_wrapper import LeidenClusterer
-import coloredlogs, logging
 import networkit as nk
+from structlog import get_logger
 
 from hm01.types import AbstractCluterer
 from .ikc_wrapper import IkcClusterer
 from .context import context
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-coloredlogs.install(level="DEBUG", logger=logger)
 
 class ClustererSpec(str, Enum):
     leiden = "leiden"
     ikc = "ikc"
 
+
 @dataclass
 class MincutRequirement:
     """A linear combination of the log10 cluster size, mcd of the cluster, and the k given in the input"""
+
     log10: float
     mcd: float
     k: float
-    constant : int
+    constant: int
 
     def is_sane(self, clusterer):
         if self.log10 <= 0 and self.mcd <= 0 and self.k <= 0 and self.constant <= 0:
@@ -37,7 +36,7 @@ class MincutRequirement:
         if not isinstance(clusterer, IkcClusterer):
             return self.k == 0
         return True
-    
+
     def validity_threshold(self, clusterer, cluster):
         log10 = math.log10(cluster.n())
         mcd = cluster.mcd()
@@ -76,7 +75,7 @@ class MincutRequirement:
         vals = {}
         while s:
             n, s = take_num(s)
-            if s and s[0] == '+':
+            if s and s[0] == "+":
                 constant += n
                 s = s[1:]
                 continue
@@ -95,7 +94,8 @@ class MincutRequirement:
             k = vals["k"]
         return MincutRequirement(log10, mcd, k, constant)
 
-def summarize_graphs(graphs : List[IntangibleSubgraph]) -> str:
+
+def summarize_graphs(graphs: List[IntangibleSubgraph]) -> str:
     if not graphs:
         return "[](empty)"
     if len(graphs) > 3:
@@ -103,44 +103,61 @@ def summarize_graphs(graphs : List[IntangibleSubgraph]) -> str:
     else:
         return f"[{', '.join([g.index for g in graphs])}]({len(graphs)})"
 
+
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
 ) -> Tuple[List[IntangibleSubgraph], Dict[int, str]]:
-    logger.info("Starting algorithm-g")
-    queue : Deque[IntangibleSubgraph] = deque(graphs)
-    logger.info("Initially having %d subgraphs", len(queue))
+    log = get_logger()
+    queue: Deque[IntangibleSubgraph] = deque(graphs)
+    log.info("starting algorithm-g", queue_size=len(queue))
     ans = []
     node2cids = {}
     while queue:
-        logger.debug("Queue size: %d", len(queue))
+        log = get_logger()
+        log.debug("entered next iteration of loop", queue_size=len(queue))
         intangible_graph = queue.popleft()
-        logger.debug("Popped graph with size %d with index %s", intangible_graph.n(), intangible_graph.index)
+        log.debug(
+            "popped graph",
+            graph_n=intangible_graph.n(),
+            graph_index=intangible_graph.index,
+        )
         if intangible_graph.n() <= 1:
             ans.append(intangible_graph)
             continue
         graph = intangible_graph.realize(global_graph)
+        log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m())
         for n in graph.nodes():
             node2cids[n] = graph.index
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
         valid_threshold = requirement.validity_threshold(clusterer, graph)
-        logger.debug("Valid threshold (ID=%s): %f", graph.index, valid_threshold)
-        logger.debug("Mincut result (ID=%s): light side=%d heavy side=%d cut size=%d", graph.index, len(mincut_res.light_partition), len(mincut_res.heavy_partition), mincut_res.cut_size)
+        log.debug("calculated validity threshold", validity_threshold=valid_threshold)
+        log.debug(
+            "mincut computed",
+            a_side_size=len(mincut_res.light_partition),
+            b_side_size=len(mincut_res.heavy_partition),
+            cut_size=mincut_res.cut_size,
+        )
         if mincut_res.cut_size <= valid_threshold and mincut_res.cut_size > 0:
             p1, p2 = graph.cut_by_mincut(mincut_res)
             subp1 = list(clusterer.cluster_without_singletons(p1))
             subp2 = list(clusterer.cluster_without_singletons(p2))
             queue.extend(subp1)
             queue.extend(subp2)
-            logger.info("Clusters split (ID=%s): into %s and %s", graph.index, summarize_graphs(subp1), summarize_graphs(subp2))
+            log.info(
+                "cluster split",
+                num_a_side=len(subp1),
+                num_b_side=len(subp2),
+                summary_a_side=summarize_graphs(subp1),
+                summary_b_side=summarize_graphs(subp2),
+            )
         else:
             ans.append(graph.to_intangible(global_graph))
-            logger.info("Cut-valid, not splitting anymore (ID=%s)", graph.index)
+            log.info("cut valid, not splitting anymore")
         del graph.data
-        logger.debug("Queue size (at end): %d", len(queue))
     return ans, node2cids
 
 
@@ -156,22 +173,34 @@ def main(
     """Take a network and cluster it ensuring cut validity"""
     if clusterer_spec == ClustererSpec.leiden:
         assert resolution != -1
-        clusterer : Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
+        clusterer: Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
     else:
         assert k != -1
         clusterer = IkcClusterer(k)
+    log = get_logger()
     context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
-    logger.info(f"Loading graph from {input} with working directory {context.working_dir}")
+    log.info(f"loaded graph", input=input, working_dir=context.working_dir)
     requirement = MincutRequirement.try_from_str(threshold)
-    logger.info(f"Connectivity requirement: {requirement}")
+    log.info(f"parsed connectivity requirement", requirement=requirement)
     time1 = time.time()
-    edgelist_reader = nk.graphio.EdgeListReader('\t',0)
+    edgelist_reader = nk.graphio.EdgeListReader("\t", 0)
     nk_graph = edgelist_reader.read(input)
-    logger.info(f"Loaded graph with {nk_graph.numberOfNodes()} nodes and {nk_graph.numberOfEdges()} edges in {time.time() - time1:.2f} seconds")
+    log.info(
+        f"loaded graph",
+        n=nk_graph.numberOfNodes(),
+        m=nk_graph.numberOfEdges(),
+        elapsed=time.time() - time1,
+    )
     root_graph = Graph(nk_graph, "")
-    logger.info(f"Running first round of clustering before handing to algorithm-g")
+    log.info(
+        f"running first round of clustering before algorithm-g", clusterer=clusterer
+    )
     clusters = list(clusterer.cluster_without_singletons(root_graph))
-    logger.info(f"First round of clustering done, got {len(clusters)} clusters")
+    log.info(
+        f"first round of clustering done",
+        num_clusters=len(clusters),
+        summary=summarize_graphs(clusters),
+    )
     new_clusters, labels = algorithm_g(root_graph, clusters, clusterer, requirement)
     if output:
         with open(output, "w") as f:
@@ -181,8 +210,10 @@ def main(
         for n, cid in labels.items():
             print(f"{n} {cid}")
 
+
 def entry_point():
     typer.run(main)
+
 
 if __name__ == "__main__":
     entry_point()

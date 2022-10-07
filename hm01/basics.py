@@ -6,9 +6,9 @@ from typing import Iterator, List, Tuple
 import os
 from . import mincut
 from .context import context
+from structlog import get_logger
 
-logger = logging.getLogger(__name__)
-
+log = get_logger()
 class Graph:
     """Wrapped graph over a networkit graph with an ID label"""
     def __init__(self, data, index):
@@ -34,7 +34,7 @@ class Graph:
     
     def find_clusters(self, clusterer) -> Iterator[IntangibleSubgraph]:
         """Find clusters using the given clusterer"""
-        logger.info(f"Finding clusters (ID={self.index}) (n={self.n()}) (m={self.m()})")
+        log.info(f"Finding clusters using clusterer", id = self.index, n = self.n(), m = self.m(), clusterer = clusterer)
         return clusterer.cluster(self)
     
     def find_mincut(self):
