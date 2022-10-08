@@ -7,6 +7,7 @@ import os
 from . import mincut
 from .context import context
 from structlog import get_logger
+from functools import cache
 
 log = get_logger()
 class Graph:
@@ -29,6 +30,7 @@ class Graph:
         """Number of edges"""
         return self.data.numberOfEdges()
     
+    @cache
     def mcd(self):
         return min(self.data.degree(n) for n in self.data.iterNodes())
     

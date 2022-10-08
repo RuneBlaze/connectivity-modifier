@@ -8,13 +8,14 @@ import time
 from collections import deque
 from hm01.basics import Graph, IntangibleSubgraph
 from hm01.leiden_wrapper import LeidenClusterer
+from itertools import chain
+import treeswift as ts
 import networkit as nk
 from structlog import get_logger
-
+import jsonpickle
 from hm01.types import AbstractCluterer
 from .ikc_wrapper import IkcClusterer
 from .context import context
-
 
 class ClustererSpec(str, Enum):
     leiden = "leiden"
@@ -41,7 +42,7 @@ class MincutRequirement:
         log10 = math.log10(cluster.n())
         mcd = cluster.mcd()
         k = clusterer.k if isinstance(clusterer, IkcClusterer) else 0
-        return self.log10 * log10 + self.mcd * mcd + self.k * k
+        return self.log10 * log10 + self.mcd * mcd + self.k * k + self.constant
 
     @staticmethod
     def most_stringent() -> MincutRequirement:
@@ -104,13 +105,27 @@ def summarize_graphs(graphs: List[IntangibleSubgraph]) -> str:
         return f"[{', '.join([g.index for g in graphs])}]({len(graphs)})"
 
 
+def annotate_tree_node(node : ts.Node, graph : Union[Graph, IntangibleSubgraph]):
+    node.label = graph.index
+    node.graph_index = graph.index
+    node.num_nodes = graph.n()
+    node.extant = False
+
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
-) -> Tuple[List[IntangibleSubgraph], Dict[int, str]]:
+) -> Tuple[List[IntangibleSubgraph], Dict[int, str], ts.Tree]:
     log = get_logger()
+    tree = ts.Tree()
+    annotate_tree_node(tree.root, global_graph)
+    node_mapping : Dict[str, ts.Node] = {}
+    for g in graphs:
+        n = ts.Node()
+        annotate_tree_node(n, g)
+        tree.root.add_child(n)
+        node_mapping[g.index] = n
     queue: Deque[IntangibleSubgraph] = deque(graphs)
     log.info("starting algorithm-g", queue_size=len(queue))
     ans = []
@@ -125,10 +140,10 @@ def algorithm_g(
             graph_index=intangible_graph.index,
         )
         if intangible_graph.n() <= 1:
-            ans.append(intangible_graph)
             continue
         graph = intangible_graph.realize(global_graph)
-        log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m())
+        tree_node = node_mapping[graph.index]
+        log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd())
         for n in graph.nodes():
             node2cids[n] = graph.index
         mincut_res = graph.find_mincut()
@@ -141,10 +156,26 @@ def algorithm_g(
             b_side_size=len(mincut_res.heavy_partition),
             cut_size=mincut_res.cut_size,
         )
+        tree_node.cut_size = mincut_res.cut_size
+        tree_node.validity_threshold = valid_threshold
         if mincut_res.cut_size <= valid_threshold and mincut_res.cut_size > 0:
             p1, p2 = graph.cut_by_mincut(mincut_res)
+            node_a = ts.Node()
+            node_b = ts.Node()
+            annotate_tree_node(node_a, p1)
+            annotate_tree_node(node_b, p2)
+            tree_node.add_child(node_a)
+            tree_node.add_child(node_b)
+            node_mapping[p1.index] = node_a
+            node_mapping[p2.index] = node_b
             subp1 = list(clusterer.cluster_without_singletons(p1))
             subp2 = list(clusterer.cluster_without_singletons(p2))
+            for p, np in [(subp1, node_a), (subp2, node_b)]:
+                for sg in p:
+                    n = ts.Node()
+                    annotate_tree_node(n, sg)
+                    node_mapping[sg.index] = n
+                    np.add_child(n)
             queue.extend(subp1)
             queue.extend(subp2)
             log.info(
@@ -156,9 +187,10 @@ def algorithm_g(
             )
         else:
             ans.append(graph.to_intangible(global_graph))
+            node_mapping[graph.index].extant = True
             log.info("cut valid, not splitting anymore")
         del graph.data
-    return ans, node2cids
+    return ans, node2cids, tree
 
 
 def main(
@@ -201,19 +233,19 @@ def main(
         num_clusters=len(clusters),
         summary=summarize_graphs(clusters),
     )
-    new_clusters, labels = algorithm_g(root_graph, clusters, clusterer, requirement)
+    new_clusters, labels, tree = algorithm_g(root_graph, clusters, clusterer, requirement)
     if output:
         with open(output, "w") as f:
             for n, cid in labels.items():
                 f.write(f"{n} {cid}\n")
+        with open(output + ".tree.json", "w+") as f:
+            f.write(jsonpickle.encode(tree))
     else:
         for n, cid in labels.items():
             print(f"{n} {cid}")
 
-
 def entry_point():
     typer.run(main)
-
 
 if __name__ == "__main__":
     entry_point()

@@ -85,6 +85,19 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "jsonpickle"
+version = "2.2.0"
+description = "Python library for serializing any arbitrary object graph into JSON"
+category = "main"
+optional = false
+python-versions = ">=2.7"
+
+[package.extras]
+docs = ["jaraco.packaging (>=3.2)", "rst.linker (>=1.9)", "sphinx"]
+testing = ["ecdsa", "enum34", "feedparser", "jsonlib", "numpy", "pandas", "pymongo", "pytest (>=3.5,!=3.7.3)", "pytest-black-multipy", "pytest-checkdocs (>=1.2.3)", "pytest-cov", "pytest-flake8 (<1.1.0)", "pytest-flake8 (>=1.1.1)", "scikit-learn", "sqlalchemy"]
+"testing.libs" = ["simplejson", "ujson", "yajl"]
+
+[[package]]
 name = "leidenalg"
 version = "0.9.0"
 description = "Leiden is a general algorithm for methods of community detection in large networks."
@@ -298,6 +311,17 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "treeswift"
+version = "1.1.28"
+description = "TreeSwift: Fast tree module for Python 2 and 3"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+dev = ["check-manifest"]
+
+[[package]]
 name = "typer"
 version = "0.6.1"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
@@ -325,7 +349,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ed34b5303f4e3c5a989fcda13ee5f9b483053b6c81928215da3d5004e7fe18cf"
+content-hash = "520a69edc93792c03eae26c61fa41e63f6c50198959be4186f6efdad50319e45"
 
 [metadata.files]
 attrs = [
@@ -398,6 +422,10 @@ igraph = [
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
+]
+jsonpickle = [
+    {file = "jsonpickle-2.2.0-py2.py3-none-any.whl", hash = "sha256:de7f2613818aa4f234138ca11243d6359ff83ae528b2185efdd474f62bcf9ae1"},
+    {file = "jsonpickle-2.2.0.tar.gz", hash = "sha256:7b272918b0554182e53dc340ddd62d9b7f902fec7e7b05620c04f3ccef479a0e"},
 ]
 leidenalg = [
     {file = "leidenalg-0.9.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:4e8e0c2c74474cb869f691e70aed3daa3c7d39db7c60b169e3cc162b52f5bd82"},
@@ -627,6 +655,10 @@ texttable = [
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+treeswift = [
+    {file = "treeswift-1.1.28-py2.py3-none-any.whl", hash = "sha256:a0f4097e41744c158241f3e69464ad29499f7a9a112859036cec86d3fef5135f"},
+    {file = "treeswift-1.1.28.tar.gz", hash = "sha256:97db59f5fdd50e7e39f72bbead590b35de8c5c93d371a0b46bf25bd3e9d6e33f"},
 ]
 typer = [
     {file = "typer-0.6.1-py3-none-any.whl", hash = "sha256:54b19e5df18654070a82f8c2aa1da456a4ac16a2a83e6dcd9f170e291c56338e"},
