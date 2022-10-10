@@ -21,6 +21,13 @@ class Graph:
     def from_nk(graph, index = ""):
         """Create a wrapped graph from a networkit graph"""
         return Graph(graph, index)
+    
+    @staticmethod
+    def from_edgelist(path):
+        """Read a graph from an edgelist file"""
+        edgelist_reader = nk.graphio.EdgeListReader("\t", 0)
+        nk_graph = edgelist_reader.read(path)
+        return Graph.from_nk(nk_graph)
 
     def n(self):
         """Number of nodes"""
@@ -114,7 +121,7 @@ class IntangibleSubgraph():
     nodes : List[int]
     index : str
 
-    def realize(self, graph) -> Graph:
+    def realize(self, graph : Graph) -> Graph:
         """Realize the subgraph"""
         return graph.induced_subgraph(self.nodes, self.index)
 

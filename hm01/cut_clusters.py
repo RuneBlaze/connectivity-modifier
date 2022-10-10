@@ -211,7 +211,7 @@ def main(
         clusterer = IkcClusterer(k)
     log = get_logger()
     context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
-    log.info(f"loaded graph", input=input, working_dir=context.working_dir)
+    log.info(f"starting hm01", input=input, working_dir=context.working_dir)
     requirement = MincutRequirement.try_from_str(threshold)
     log.info(f"parsed connectivity requirement", requirement=requirement)
     time1 = time.time()
