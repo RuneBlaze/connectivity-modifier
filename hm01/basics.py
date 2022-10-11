@@ -45,7 +45,7 @@ class Graph:
     def mcd(self):
         return min(self.data.degree(n) for n in self.data.iterNodes())
 
-    def find_clusters(self, clusterer) -> Iterator[IntangibleSubgraph]:
+    def find_clusters(self, clusterer, with_singletons = True) -> Iterator[IntangibleSubgraph]:
         """Find clusters using the given clusterer"""
         log.info(
             f"Finding clusters using clusterer",
@@ -54,7 +54,10 @@ class Graph:
             m=self.m(),
             clusterer=clusterer,
         )
-        return clusterer.cluster(self)
+        if with_singletons:
+            return clusterer.cluster(self)
+        else:
+            return clusterer.cluster_without_singletons(self)
 
     def find_mincut(self):
         """Find a mincut wrapped over Viecut"""
