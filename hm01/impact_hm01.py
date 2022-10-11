@@ -18,15 +18,16 @@ class ClusteringMetadata:
         self.lookup = {}
         for n in tree.traverse_postorder():
             self.lookup[n.label] = n
-    
-    def find_info(self, graph : Graph):
+
+    def find_info(self, graph: Graph):
         """Find the info for the graph"""
         return self.lookup[graph.index]
 
 
-def summary_list(list : Sequence[Union[int, float]]) -> str:
+def summary_list(list: Sequence[Union[int, float]]) -> str:
     """Summarize a list of numbers"""
     return f"{min(list)}-{np.median(list)}-{max(list)}"
+
 
 @dataclass
 class ClusteringStats:
@@ -38,17 +39,18 @@ class ClusteringStats:
     cluster_sizes: List[int]
 
     def to_stats(self, global_graph: Graph) -> pd.DataFrame:
-        return pd.DataFrame({
-            "num_clusters": [self.num_clusters],
-            "node_coverage": [self.total_nodes / global_graph.n()],
-            "total_nodes" : [self.total_nodes],
-            "edge_coverage": [self.total_edges / global_graph.m()],
-            "total_edges" : [self.total_edges],
-            "top_singleton_nodes": [self.top_singleton_nodes],
-            "min_cut_sizes": [summary_list(self.min_cut_sizes)],
-            "cluster_sizes": [summary_list(self.cluster_sizes)]
-        })
-
+        return pd.DataFrame(
+            {
+                "num_clusters": [self.num_clusters],
+                "node_coverage": [self.total_nodes / global_graph.n()],
+                "total_nodes": [self.total_nodes],
+                "edge_coverage": [self.total_edges / global_graph.m()],
+                "total_edges": [self.total_edges],
+                "top_singleton_nodes": [self.top_singleton_nodes],
+                "min_cut_sizes": [summary_list(self.min_cut_sizes)],
+                "cluster_sizes": [summary_list(self.cluster_sizes)],
+            }
+        )
 
     @staticmethod
     def from_list_of_graphs(
@@ -71,8 +73,18 @@ class ClusteringStats:
             min_cut_sizes.append(metadata.find_info(g).cut_size)
             cluster_sizes.append(g.n())
             included_nodes.update(g.nodes())
-        ninty_percentile_degree = np.percentile([global_graph.data.degree(n) for n in global_graph.nodes()], 90)
-        top_singleton_nodes = sum(1 for n in global_graph.nodes() if global_graph.data.degree(n) >= ninty_percentile_degree and n not in included_nodes) / global_graph.n()
+        ninty_percentile_degree = np.percentile(
+            [global_graph.data.degree(n) for n in global_graph.nodes()], 90
+        )
+        top_singleton_nodes = (
+            sum(
+                1
+                for n in global_graph.nodes()
+                if global_graph.data.degree(n) >= ninty_percentile_degree
+                and n not in included_nodes
+            )
+            / global_graph.n()
+        )
         return ClusteringStats(
             num_clusters,
             total_nodes,
@@ -81,6 +93,7 @@ class ClusteringStats:
             min_cut_sizes,
             cluster_sizes,
         )
+
 
 def main(
     input: str = typer.Option(..., "--input", "-i"),
@@ -109,15 +122,22 @@ def main(
     log.info("loaded clustering")
     for c in tree.root.children:
         c.nodes = list(set.union(*[set(n.nodes) for n in c.traverse_postorder()]))
-    original_clusters = [IntangibleSubgraph(n.nodes, n.label) for n in tree.root.children]
-    extant_clusters = [IntangibleSubgraph(n.nodes, n.label) for n in tree.traverse_leaves() if n.extant]
-    log.info("loaded clusters", num_original_clusters=len(original_clusters), num_extant_clusters=len(extant_clusters))
+    original_clusters = [
+        IntangibleSubgraph(n.nodes, n.label) for n in tree.root.children
+    ]
+    extant_clusters = [
+        IntangibleSubgraph(n.nodes, n.label) for n in tree.traverse_leaves() if n.extant
+    ]
+    log.info(
+        "loaded clusters",
+        num_original_clusters=len(original_clusters),
+        num_extant_clusters=len(extant_clusters),
+    )
     stat1 = ClusteringStats.from_list_of_graphs(graph, original_clusters, metadata)
     stat2 = ClusteringStats.from_list_of_graphs(graph, extant_clusters, metadata)
     log.info("done calculating")
     stat1.to_stats(graph).to_csv(output + ".original.csv", index=False)
     stat2.to_stats(graph).to_csv(output + ".extant.csv", index=False)
-    
 
 
 def entry_point():

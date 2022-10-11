@@ -9,11 +9,13 @@ import os
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MincutResult:
-    light_partition : List[int] # 0 labeled nodes
-    heavy_partition : List[int] # 1 labeled nodes
-    cut_size : int
+    light_partition: List[int]  # 0 labeled nodes
+    heavy_partition: List[int]  # 1 labeled nodes
+    cut_size: int
+
 
 def viecut(graph):
     if graph.n() == 2 and graph.m() == 1:
@@ -23,6 +25,7 @@ def viecut(graph):
     cut_path = metis + ".cut"
     cut_result = run_viecut_command(metis, cut_path, hydrator=graph.hydrator)
     return cut_result
+
 
 def run_viecut_command(metis_path, output_path, hydrator=None):
     """Run the viecut command and return the output path"""

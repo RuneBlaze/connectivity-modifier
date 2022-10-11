@@ -5,15 +5,17 @@ import atexit
 import shutil
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 class Context:
     def __init__(self):
         self._working_dir = "hm01_working_dir"
         self.transient = False
-    
+
     def with_working_dir(self, working_dir):
         self._working_dir = working_dir
         return self
-    
+
     def as_transient(self):
         self.transient = True
         return self
@@ -25,11 +27,11 @@ class Context:
     @property
     def leiden_path(self):
         return self.config["tools"]["leiden_path"].format(project_root=PROJECT_ROOT)
-    
+
     @property
     def viecut_path(self):
         return self.config["tools"]["viecut_path"].format(project_root=PROJECT_ROOT)
-    
+
     @cached_property
     def config(self):
         lookup_paths = [
@@ -41,8 +43,11 @@ class Context:
             if os.path.exists(path):
                 with open(path, "rb") as f:
                     return load(f)
-        raise FileNotFoundError("Config file not found in any of the following paths: " + ", ".join(lookup_paths))
-    
+        raise FileNotFoundError(
+            "Config file not found in any of the following paths: "
+            + ", ".join(lookup_paths)
+        )
+
     @cached_property
     def working_dir(self):
         if not os.path.exists(self._working_dir):
@@ -55,7 +60,8 @@ class Context:
         return self._working_dir
 
     def request_graph_related_path(self, graph, suffix):
-        return os.path.join(self.working_dir, graph.index + '.' + suffix)
+        return os.path.join(self.working_dir, graph.index + "." + suffix)
+
 
 # we export the context as a singleton
 context = Context()

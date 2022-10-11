@@ -17,6 +17,7 @@ from hm01.types import AbstractCluterer
 from .ikc_wrapper import IkcClusterer
 from .context import context
 
+
 class ClustererSpec(str, Enum):
     leiden = "leiden"
     ikc = "ikc"
@@ -105,11 +106,12 @@ def summarize_graphs(graphs: List[IntangibleSubgraph]) -> str:
         return f"[{', '.join([g.index for g in graphs])}]({len(graphs)})"
 
 
-def annotate_tree_node(node : ts.Node, graph : Union[Graph, IntangibleSubgraph]):
+def annotate_tree_node(node: ts.Node, graph: Union[Graph, IntangibleSubgraph]):
     node.label = graph.index
     node.graph_index = graph.index
     node.num_nodes = graph.n()
     node.extant = False
+
 
 def algorithm_g(
     global_graph: Graph,
@@ -120,7 +122,7 @@ def algorithm_g(
     log = get_logger()
     tree = ts.Tree()
     annotate_tree_node(tree.root, global_graph)
-    node_mapping : Dict[str, ts.Node] = {}
+    node_mapping: Dict[str, ts.Node] = {}
     for g in graphs:
         n = ts.Node()
         annotate_tree_node(n, g)
@@ -143,7 +145,9 @@ def algorithm_g(
             continue
         graph = intangible_graph.realize(global_graph)
         tree_node = node_mapping[graph.index]
-        log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd())
+        log = log.bind(
+            g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
+        )
         for n in graph.nodes():
             node2cids[n] = graph.index
         mincut_res = graph.find_mincut()
@@ -197,7 +201,9 @@ def main(
     input: str = typer.Option(..., "--input", "-i"),
     working_dir: Optional[str] = typer.Option("", "--working-dir", "-d"),
     clusterer_spec: ClustererSpec = typer.Option(..., "--clusterer", "-c"),
-    existing_clustering : Optional[str] = typer.Option("", "--existing-clustering", "-e"),
+    existing_clustering: Optional[str] = typer.Option(
+        "", "--existing-clustering", "-e"
+    ),
     k: int = typer.Option(-1, "--k", "-k"),
     resolution: float = typer.Option(-1, "--resolution", "-g"),
     threshold: str = typer.Option("", "--threshold", "-t"),
@@ -231,16 +237,16 @@ def main(
         )
         clusters = list(clusterer.cluster_without_singletons(root_graph))
     else:
-        log.info(
-            f"loading existing clustering before algorithm-g", clusterer=clusterer
-        )
+        log.info(f"loading existing clustering before algorithm-g", clusterer=clusterer)
         clusters = clusterer.from_existing_clustering(existing_clustering)
     log.info(
         f"first round of clustering obtained",
         num_clusters=len(clusters),
         summary=summarize_graphs(clusters),
     )
-    new_clusters, labels, tree = algorithm_g(root_graph, clusters, clusterer, requirement)
+    new_clusters, labels, tree = algorithm_g(
+        root_graph, clusters, clusterer, requirement
+    )
     if output:
         with open(output, "w") as f:
             for n, cid in labels.items():
@@ -251,8 +257,10 @@ def main(
         for n, cid in labels.items():
             print(f"{n} {cid}")
 
+
 def entry_point():
     typer.run(main)
+
 
 if __name__ == "__main__":
     entry_point()
