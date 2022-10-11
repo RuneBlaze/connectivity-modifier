@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import coloredlogs, logging
 from typing import List, Tuple
+
 from .context import context
 import subprocess
 import re
@@ -15,6 +16,9 @@ class MincutResult:
     cut_size : int
 
 def viecut(graph):
+    if graph.n() == 2 and graph.m() == 1:
+        nodes = list(graph.nodes())
+        return MincutResult([nodes[0]], [nodes[1]], 1)
     metis = graph.as_metis_filepath()
     cut_path = metis + ".cut"
     cut_result = run_viecut_command(metis, cut_path, hydrator=graph.hydrator)

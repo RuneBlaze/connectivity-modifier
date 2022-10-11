@@ -20,6 +20,7 @@ structlog = "^22.1.0"
 treeswift = "^1.1.28"
 jsonpickle = "^2.2.0"
 graphviz = "^0.20.1"
+typing-extensions = "^4.4.0"
 
 [tool.poetry.scripts]
 hm01 = 'hm01.cut_clusters:entry_point'

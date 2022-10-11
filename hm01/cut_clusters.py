@@ -197,6 +197,7 @@ def main(
     input: str = typer.Option(..., "--input", "-i"),
     working_dir: Optional[str] = typer.Option("", "--working-dir", "-d"),
     clusterer_spec: ClustererSpec = typer.Option(..., "--clusterer", "-c"),
+    existing_clustering : Optional[str] = typer.Option("", "--existing-clustering", "-e"),
     k: int = typer.Option(-1, "--k", "-k"),
     resolution: float = typer.Option(-1, "--resolution", "-g"),
     threshold: str = typer.Option("", "--threshold", "-t"),
@@ -224,12 +225,18 @@ def main(
         elapsed=time.time() - time1,
     )
     root_graph = Graph(nk_graph, "")
+    if not existing_clustering:
+        log.info(
+            f"running first round of clustering before algorithm-g", clusterer=clusterer
+        )
+        clusters = list(clusterer.cluster_without_singletons(root_graph))
+    else:
+        log.info(
+            f"loading existing clustering before algorithm-g", clusterer=clusterer
+        )
+        clusters = clusterer.from_existing_clustering(existing_clustering)
     log.info(
-        f"running first round of clustering before algorithm-g", clusterer=clusterer
-    )
-    clusters = list(clusterer.cluster_without_singletons(root_graph))
-    log.info(
-        f"first round of clustering done",
+        f"first round of clustering obtained",
         num_clusters=len(clusters),
         summary=summarize_graphs(clusters),
     )

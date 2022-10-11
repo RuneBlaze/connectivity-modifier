@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 from typing import List, Iterator
+from collections import defaultdict
+import csv
 
 import networkit as nk
 
@@ -76,3 +78,15 @@ class IkcClusterer(AbstractCluterer):
             "cluster_to_id_dict": cluster_to_id_dict,
             "id_to_cluster_dict": id_to_cluster_dict,
         }
+    
+    def from_existing_clustering(self, filepath) -> List[IntangibleSubgraph]:
+        clusters = {}
+        with open(filepath, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            for row in reader:
+                node_id = int(row[0])
+                cluster_id = row[1]
+                if cluster_id not in clusters:
+                    clusters[cluster_id] = IntangibleSubgraph([], cluster_id)
+                clusters[cluster_id].nodes.append(node_id)
+        return list(clusters.values())

@@ -1,8 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import logging
+from typing_extensions import Self
 import networkit as nk
-from typing import Iterator, List, Tuple
+from typing import Dict, Iterator, List, Sequence, Tuple
 import os
 from . import mincut
 from .context import context
@@ -130,3 +131,15 @@ class IntangibleSubgraph():
     
     def n(self):
         return len(self)
+
+    @staticmethod
+    def from_assignment_pairs(pairs : Iterator[Tuple[int, str]]) -> List[IntangibleSubgraph]:
+        clusters : Dict[str, IntangibleSubgraph] = {}
+        for node, cluster in pairs:
+            if cluster not in clusters:
+                clusters[cluster] = IntangibleSubgraph([], cluster)
+            clusters[cluster].nodes.append(node)
+        res = list(v for v in clusters.values() if v.n() > 0)
+        if not res:
+            raise ValueError("No non-singleton clusters found. Aborting.")
+        return res
