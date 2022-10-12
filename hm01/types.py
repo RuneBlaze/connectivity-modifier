@@ -1,10 +1,12 @@
+from __future__ import annotations
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Iterator, List, Protocol
 
 from hm01.basics import IntangibleSubgraph
 
 
-class AbstractCluterer(Protocol):
+class AbstractClusterer(Protocol):
     @abstractmethod
     def cluster(self, graph) -> Iterator[IntangibleSubgraph]:
         raise NotImplementedError

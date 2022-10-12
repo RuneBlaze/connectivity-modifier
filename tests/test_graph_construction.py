@@ -1,5 +1,6 @@
 from hm01.basics import *
 import networkit as nk
+import os
 
 def test_basic_graph_wrapping():
     data = nk.generators.ErdosRenyiGenerator(100, 0.99).generate()

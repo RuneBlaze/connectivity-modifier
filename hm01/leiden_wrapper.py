@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, Iterator, List
 from hm01.basics import Graph, IntangibleSubgraph
-from hm01.types import AbstractCluterer
+from hm01.types import AbstractClusterer
 import leidenalg as la
 
 
 @dataclass
-class LeidenClusterer(AbstractCluterer):
+class LeidenClusterer(AbstractClusterer):
     resolution: float
 
     def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
@@ -27,4 +27,4 @@ class LeidenClusterer(AbstractCluterer):
                 clusters.setdefault(
                     cluster_id, IntangibleSubgraph([], cluster_id)
                 ).nodes.append(int(node_id))
-        return list(clusters.values())
+        return list(v for v in clusters.values() if v.n() > 1)

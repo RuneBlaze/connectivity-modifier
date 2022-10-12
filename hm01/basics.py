@@ -1,10 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import logging
 from typing_extensions import Self
 import networkit as nk
 from typing import Dict, Iterator, List, Sequence, Tuple
-import os
 from . import mincut
 from .context import context
 from structlog import get_logger
@@ -117,6 +115,22 @@ class Graph:
     @staticmethod
     def from_erdos_renyi(n, p, index=""):
         return Graph(nk.generators.ErdosRenyiGenerator(n, p).generate(), index)
+    
+    @staticmethod
+    def from_edges(edges : List[Tuple[int, int]], index=""):
+        n = max(max(u, v) for u, v in edges) + 1
+        g = nk.graph.Graph(n)
+        for u, v in edges:
+            g.addEdge(u, v)
+        return Graph(g, index)
+    
+    @staticmethod
+    def from_straight_line(n : int, index=""):
+        return Graph.from_edges([(i, i + 1) for i in range(n - 1)], index)
+    
+    @staticmethod
+    def from_clique(n : int, index=""):
+        return Graph.from_edges([(i, j) for i in range(n-1) for j in range(i + 1, n)], index)
 
     def to_intangible(self, graph):
         return IntangibleSubgraph(list(self.nodes()), self.index)

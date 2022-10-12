@@ -7,14 +7,14 @@ import csv
 
 import networkit as nk
 
-from hm01.types import AbstractCluterer
+from hm01.types import AbstractClusterer
 
 from .basics import Graph, IntangibleSubgraph
 from .context import context
 
 
 @dataclass
-class IkcClusterer(AbstractCluterer):
+class IkcClusterer(AbstractClusterer):
     k: int
 
     def cluster(self, graph) -> Iterator[IntangibleSubgraph]:
