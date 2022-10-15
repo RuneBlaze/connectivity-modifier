@@ -17,6 +17,7 @@ from hm01.types import AbstractClusterer
 from .ikc_wrapper import IkcClusterer
 from .context import context
 from .connectivity_requirement import MincutRequirement
+from .pruner import prune_graph
 
 
 class ClustererSpec(str, Enum):
@@ -71,12 +72,25 @@ def algorithm_g(
         if intangible_graph.n() <= 1:
             continue
         graph = intangible_graph.realize(global_graph)
+        if graph.n() == graph.m() + 1:
+            log.debug("graph is a tree, not interested")
+            continue
         tree_node = node_mapping[graph.index]
         log = log.bind(
             g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
-        )
+        )   
         for n in graph.nodes():
             node2cids[n] = graph.index
+        num_pruned = prune_graph(graph, requirement, clusterer)
+        if num_pruned > 0:
+            log.info("pruned graph", num_pruned=num_pruned)
+            new_child = ts.Node()
+            graph.index = f"{graph.index}δ"
+            annotate_tree_node(new_child, graph)
+            tree_node.add_child(new_child)
+            node_mapping[graph.index] = new_child
+            tree_node = new_child
+            log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd())
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
         valid_threshold = requirement.validity_threshold(clusterer, graph)

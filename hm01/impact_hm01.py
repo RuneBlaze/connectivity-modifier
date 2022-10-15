@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import os
-from typing import List, Sequence, Union
+from typing import List, Optional, Sequence, Union
+import typing
 import typer
 import jsonpickle
 import treeswift as ts
@@ -10,24 +11,28 @@ import pandas as pd
 from structlog import get_logger
 
 from hm01.basics import Graph, IntangibleSubgraph
-
+from .leiden_wrapper import LeidenClusterer
 
 class ClusteringMetadata:
+    """Metadata about a clustering as recorded in a tree."""
     def __init__(self, tree: ts.Tree):
         self.tree = tree
         self.lookup = {}
         for n in tree.traverse_postorder():
             self.lookup[n.label] = n
 
-    def find_info(self, graph: Graph):
+    def find_info(self, graph: Graph) -> Optional[ts.Node]:
         """Find the info for the graph"""
-        return self.lookup[graph.index]
+        return self.lookup.get(graph.index)
 
 
 def summary_list(list: Sequence[Union[int, float]]) -> str:
     """Summarize a list of numbers"""
     return f"{min(list)}-{np.median(list)}-{max(list)}"
 
+def read_clusters_from_leiden(filepath : str) -> List[IntangibleSubgraph]:
+    clusterer = LeidenClusterer(1)
+    return clusterer.from_existing_clustering(filepath)
 
 @dataclass
 class ClusteringStats:
@@ -70,7 +75,8 @@ class ClusteringStats:
             num_clusters += 1
             total_nodes += g.n()
             total_edges += g.m()
-            min_cut_sizes.append(metadata.find_info(g).cut_size)
+            info = metadata.find_info(g)
+            min_cut_sizes.append(info.cut_size if info else 1)
             cluster_sizes.append(g.n())
             included_nodes.update(g.nodes())
         ninty_percentile_degree = np.percentile(
@@ -99,6 +105,7 @@ def main(
     input: str = typer.Option(..., "--input", "-i"),
     graph_path: str = typer.Option(..., "--graph", "-g"),
     output: str = typer.Option(..., "--output_prefix", "-o"),
+    ancient_clustering_path: Optional[str] = typer.Option(None, "--ancient_clustering"),
 ):
     """Compute two sets of statistics for a hiearchical clustering"""
     log = get_logger()
@@ -109,7 +116,7 @@ def main(
     graph = Graph.from_edgelist(graph_path)
     log.info("loaded graph", graph_n=graph.n(), graph_m=graph.m())
     with open(treepath, "r") as f:
-        tree = jsonpickle.decode(f.read())
+        tree : ts.Tree = typing.cast(ts.Tree, jsonpickle.decode(f.read()))
     for n in tree.traverse_postorder():
         n.nodes = []
     metadata = ClusteringMetadata(tree)
@@ -136,8 +143,18 @@ def main(
     stat1 = ClusteringStats.from_list_of_graphs(graph, original_clusters, metadata)
     stat2 = ClusteringStats.from_list_of_graphs(graph, extant_clusters, metadata)
     log.info("done calculating")
+    stat3 = None
+    if ancient_clustering_path:
+        log.info("loading ancient clustering")
+        ancient_clusters = read_clusters_from_leiden(ancient_clustering_path)
+        stat3 = ClusteringStats.from_list_of_graphs(
+            graph, ancient_clusters, metadata
+        )
+        log.info("done additional calculating")
     stat1.to_stats(graph).to_csv(output + ".original.csv", index=False)
     stat2.to_stats(graph).to_csv(output + ".extant.csv", index=False)
+    if stat3:
+        stat3.to_stats(graph).to_csv(output + ".ancient.csv", index=False)
 
 
 def entry_point():
