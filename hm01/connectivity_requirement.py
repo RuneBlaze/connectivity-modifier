@@ -6,6 +6,7 @@ from .leiden_wrapper import LeidenClusterer
 from .ikc_wrapper import IkcClusterer
 from typing import List, Optional, Tuple, Union, Dict, Deque
 
+
 @dataclass
 class MincutRequirement:
     """A linear combination of the log10 cluster size, mcd of the cluster, and the k given in the input"""
@@ -15,14 +16,16 @@ class MincutRequirement:
     k: float
     constant: int
 
-    def is_sane(self, clusterer : AbstractClusterer):
+    def is_sane(self, clusterer: AbstractClusterer):
         if self.log10 <= 0 and self.mcd <= 0 and self.k <= 0 and self.constant <= 0:
             return False
         if not isinstance(clusterer, IkcClusterer):
             return self.k == 0
         return True
 
-    def validity_threshold(self, clusterer : AbstractClusterer, cluster, mcd_override : Optional[int] = None) -> float:
+    def validity_threshold(
+        self, clusterer: AbstractClusterer, cluster, mcd_override: Optional[int] = None
+    ) -> float:
         log10 = math.log10(cluster.n())
         mcd = cluster.mcd() if mcd_override is None else mcd_override
         k = clusterer.k if isinstance(clusterer, IkcClusterer) else 0
@@ -31,9 +34,9 @@ class MincutRequirement:
     @staticmethod
     def most_stringent() -> MincutRequirement:
         return MincutRequirement(0, 0, 0, 2)
-    
+
     @staticmethod
-    def from_constant(n : int) -> MincutRequirement:
+    def from_constant(n: int) -> MincutRequirement:
         return MincutRequirement(0, 0, 0, n)
 
     @staticmethod

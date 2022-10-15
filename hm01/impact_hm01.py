@@ -13,8 +13,10 @@ from structlog import get_logger
 from hm01.basics import Graph, IntangibleSubgraph
 from .leiden_wrapper import LeidenClusterer
 
+
 class ClusteringMetadata:
     """Metadata about a clustering as recorded in a tree."""
+
     def __init__(self, tree: ts.Tree):
         self.tree = tree
         self.lookup = {}
@@ -30,9 +32,11 @@ def summary_list(list: Sequence[Union[int, float]]) -> str:
     """Summarize a list of numbers"""
     return f"{min(list)}-{np.median(list)}-{max(list)}"
 
-def read_clusters_from_leiden(filepath : str) -> List[IntangibleSubgraph]:
+
+def read_clusters_from_leiden(filepath: str) -> List[IntangibleSubgraph]:
     clusterer = LeidenClusterer(1)
     return clusterer.from_existing_clustering(filepath)
+
 
 @dataclass
 class ClusteringStats:
@@ -116,7 +120,7 @@ def main(
     graph = Graph.from_edgelist(graph_path)
     log.info("loaded graph", graph_n=graph.n(), graph_m=graph.m())
     with open(treepath, "r") as f:
-        tree : ts.Tree = typing.cast(ts.Tree, jsonpickle.decode(f.read()))
+        tree: ts.Tree = typing.cast(ts.Tree, jsonpickle.decode(f.read()))
     for n in tree.traverse_postorder():
         n.nodes = []
     metadata = ClusteringMetadata(tree)
@@ -147,9 +151,7 @@ def main(
     if ancient_clustering_path:
         log.info("loading ancient clustering")
         ancient_clusters = read_clusters_from_leiden(ancient_clustering_path)
-        stat3 = ClusteringStats.from_list_of_graphs(
-            graph, ancient_clusters, metadata
-        )
+        stat3 = ClusteringStats.from_list_of_graphs(graph, ancient_clusters, metadata)
         log.info("done additional calculating")
     stat1.to_stats(graph).to_csv(output + ".original.csv", index=False)
     stat2.to_stats(graph).to_csv(output + ".extant.csv", index=False)

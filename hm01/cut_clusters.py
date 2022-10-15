@@ -78,7 +78,7 @@ def algorithm_g(
         tree_node = node_mapping[graph.index]
         log = log.bind(
             g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
-        )   
+        )
         for n in graph.nodes():
             node2cids[n] = graph.index
         num_pruned = prune_graph(graph, requirement, clusterer)
@@ -90,7 +90,9 @@ def algorithm_g(
             tree_node.add_child(new_child)
             node_mapping[graph.index] = new_child
             tree_node = new_child
-            log = log.bind(g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd())
+            log = log.bind(
+                g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
+            )
         mincut_res = graph.find_mincut()
         # is a cluster "cut-valid" -- having good connectivity?
         valid_threshold = requirement.validity_threshold(clusterer, graph)
