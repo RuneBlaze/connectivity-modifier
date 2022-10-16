@@ -6,7 +6,7 @@ from typing import Dict, Iterator, List, Sequence, Tuple
 from . import mincut
 from .context import context
 from structlog import get_logger
-from functools import cache
+from functools import cache, cached_property
 
 log = get_logger()
 
@@ -41,6 +41,8 @@ class Graph:
 
     @cache
     def mcd(self):
+        if self.n() == 0:
+            return 0
         return min(self.data.degree(n) for n in self.data.iterNodes())
 
     def find_clusters(
@@ -178,3 +180,16 @@ class IntangibleSubgraph:
         if not res:
             raise ValueError("No non-singleton clusters found. Aborting.")
         return res
+
+    @cached_property
+    def nodeset(self):
+        return set(self.nodes)
+    
+    def edges(self, graph : Graph) -> Iterator[Tuple[int, int]]:
+        for n in self.nodes:
+            for e in graph.data.iterNeighbors(n):
+                if e in self.nodeset:
+                    yield n, e
+    
+    def count_edges(self, global_graph : Graph):
+        return sum(1 for _ in self.edges(global_graph)) // 2

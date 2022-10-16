@@ -23,7 +23,7 @@ class ClusteringMetadata:
         for n in tree.traverse_postorder():
             self.lookup[n.label] = n
 
-    def find_info(self, graph: Graph) -> Optional[ts.Node]:
+    def find_info(self, graph: Union[Graph, IntangibleSubgraph]) -> Optional[ts.Node]:
         """Find the info for the graph"""
         return self.lookup.get(graph.index)
 
@@ -73,16 +73,16 @@ class ClusteringStats:
         min_cut_sizes: List[int] = []
         cluster_sizes: List[int] = []
         included_nodes = set()
-        for g in (g.realize(global_graph) for g in graphs):
+        for g in graphs:
             if g.n() == 0:
                 continue
             num_clusters += 1
             total_nodes += g.n()
-            total_edges += g.m()
+            total_edges += g.count_edges(global_graph)
             info = metadata.find_info(g)
             min_cut_sizes.append(info.cut_size if info else 1)
             cluster_sizes.append(g.n())
-            included_nodes.update(g.nodes())
+            included_nodes.update(g.nodes)
         ninty_percentile_degree = np.percentile(
             [global_graph.data.degree(n) for n in global_graph.nodes()], 90
         )

@@ -14,6 +14,7 @@ def test_graph_intangible():
     graph = Graph.from_nk(data)
     sg_intangible = graph.intangible_subgraph([5,7,9,11,13,15], 'a')
     assert sg_intangible.n() == 6
+    assert sg_intangible.count_edges(graph) == sg_intangible.realize(graph).m()
     assert sg_intangible.realize(graph).n() == 6
     assert sg_intangible.realize(graph).to_intangible(graph) == sg_intangible
 
