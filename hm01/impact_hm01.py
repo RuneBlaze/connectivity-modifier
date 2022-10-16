@@ -80,6 +80,10 @@ class ClusteringStats:
             total_nodes += g.n()
             total_edges += g.count_edges(global_graph)
             info = metadata.find_info(g)
+            if info:
+                # hack because I accidentally left out the ``cut_size'' attribute when pruning
+                if not hasattr(info, "cut_size"):
+                    info.cut_size = g.count_mcd(global_graph)
             min_cut_sizes.append(info.cut_size if info else 1)
             cluster_sizes.append(g.n())
             included_nodes.update(g.nodes)

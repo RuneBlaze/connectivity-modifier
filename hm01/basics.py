@@ -193,3 +193,11 @@ class IntangibleSubgraph:
     
     def count_edges(self, global_graph : Graph):
         return sum(1 for _ in self.edges(global_graph)) // 2
+
+    def count_degree(self, u, graph : Graph) -> int:
+        return sum(1 for _ in graph.data.iterNeighbors(u) if u in self.nodeset)
+
+    def count_mcd(self, graph : Graph) -> int:
+        if self.n() == 0:
+            return 0
+        return min(self.count_degree(u, graph) for u in self.nodes)
