@@ -112,6 +112,13 @@ class Graph:
         """Iterate over the nodes"""
         return self.data.iterNodes()
 
+    def modularity_of(self, g : IntangibleSubgraph) -> float:
+        """calculate the modularity of the subset `g` with respect to `self`"""
+        ls = g.count_edges(self)
+        big_l = self.m()
+        ds = sum(self.data.degree(n) for n in g.nodes)
+        return (ls / big_l) - (ds / (2 * big_l)) ** 2
+
     @staticmethod
     def from_space_edgelist(filepath: str, index=""):
         return Graph(nk.graphio.readGraph(filepath, nk.Format.EdgeListSpaceZero), index)
@@ -194,10 +201,10 @@ class IntangibleSubgraph:
     def count_edges(self, global_graph : Graph):
         return sum(1 for _ in self.edges(global_graph)) // 2
 
-    def count_degree(self, u, graph : Graph) -> int:
-        return sum(1 for _ in graph.data.iterNeighbors(u) if u in self.nodeset)
+    def internal_degree(self, u, graph : Graph) -> int:
+        return sum(1 for v in graph.data.iterNeighbors(u) if v in self.nodeset)
 
     def count_mcd(self, graph : Graph) -> int:
         if self.n() == 0:
             return 0
-        return min(self.count_degree(u, graph) for u in self.nodes)
+        return min(self.internal_degree(u, graph) for u in self.nodes)

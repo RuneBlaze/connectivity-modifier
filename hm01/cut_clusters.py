@@ -133,9 +133,17 @@ def algorithm_g(
                 summary_b_side=summarize_graphs(subp2),
             )
         else:
-            ans.append(graph.to_intangible(global_graph))
-            node_mapping[graph.index].extant = True
-            log.info("cut valid, not splitting anymore")
+            candidate = graph.to_intangible(global_graph)
+            mod = graph.modularity_of(candidate)
+            # TODO: stop ad-hoc checks of the clusterer being IkcClusterer and
+            # and thus need to use the modularity of the candidate
+            if isinstance(clusterer, IkcClusterer) and mod > 0:
+                ans.append(candidate)
+                node_mapping[graph.index].extant = True
+                log.info("cut valid, not splitting anymore")
+            else:
+                node_mapping[graph.index].extant = False
+                log.info("cut valid, but modularity non-positive, thrown away", modularity=mod)
         del graph.data
     return ans, node2cids, tree
 

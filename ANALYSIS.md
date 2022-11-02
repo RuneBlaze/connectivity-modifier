@@ -30,7 +30,7 @@ Two sets of CSV files will be written
 "High degree" is defined as 90-percentile degree.
 
 
-## Print statistics as LaTeX
+### Print statistics as LaTeX
 
 The script `analysis_scripts/summary_statistics_printer.py` can be used to print both set of summary statistics like this to a LaTeX formatted table:
 
