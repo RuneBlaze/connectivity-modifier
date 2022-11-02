@@ -137,7 +137,7 @@ def algorithm_g(
             mod = graph.modularity_of(candidate)
             # TODO: stop ad-hoc checks of the clusterer being IkcClusterer and
             # and thus need to use the modularity of the candidate
-            if isinstance(clusterer, IkcClusterer) and mod > 0:
+            if not isinstance(clusterer, IkcClusterer) or mod > 0:
                 ans.append(candidate)
                 node_mapping[graph.index].extant = True
                 log.info("cut valid, not splitting anymore")
