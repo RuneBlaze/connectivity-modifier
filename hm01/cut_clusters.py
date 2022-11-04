@@ -134,7 +134,7 @@ def algorithm_g(
             )
         else:
             candidate = graph.to_intangible(global_graph)
-            mod = graph.modularity_of(candidate)
+            mod = global_graph.modularity_of(candidate)
             # TODO: stop ad-hoc checks of the clusterer being IkcClusterer and
             # and thus need to use the modularity of the candidate
             if not isinstance(clusterer, IkcClusterer) or mod > 0:
