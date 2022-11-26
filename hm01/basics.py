@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import hashlib
 from typing_extensions import Self
 import networkit as nk
 from typing import Dict, Iterator, List, Sequence, Tuple
@@ -14,15 +15,21 @@ log = get_logger()
 class Graph:
     """Wrapped graph over a networkit graph with an ID label"""
 
-    def __init__(self, data, index):
+    def __init__(self, data, index, hashed):
         self.data = data  # nk graph
         self.index = index
+        self.hashed = hashed
         self.construct_hydrator()
+
+    def __post_init__(self):
+        if(not self.hashed):
+            self.index = hashlib.sha256(self.index.encode("utf-8")).hexdigest()
+            self.hashed = True
 
     @staticmethod
     def from_nk(graph, index=""):
         """Create a wrapped graph from a networkit graph"""
-        return Graph(graph, index)
+        return Graph(graph, index, False)
 
     @staticmethod
     def from_edgelist(path):
@@ -67,8 +74,8 @@ class Graph:
 
     def cut_by_mincut(self, mincut_res) -> Tuple[Graph, Graph]:
         """Cut the graph by the mincut result"""
-        light = self.induced_subgraph(mincut_res.light_partition, "a")
-        heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
+        light = self.induced_subgraph(mincut_res.light_partition, "a", False)
+        heavy = self.induced_subgraph(mincut_res.heavy_partition, "b", False)
         return light, heavy
 
     def construct_hydrator(self):
@@ -81,20 +88,20 @@ class Graph:
             hydrator[new_id] = old_id
         self.hydrator = hydrator
 
-    def induced_subgraph(self, ids, suffix):
+    def induced_subgraph(self, ids, suffix, hashed):
         assert suffix != "", "Suffix cannot be empty"
         data = nk.graphtools.subgraphFromNodes(self.data, ids)
         index = self.index + suffix
-        return Graph(data, index)
+        return Graph(data, index, hashed)
 
     def induced_subgraph_from_compact(self, ids, suffix):
-        return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
+        return self.induced_subgraph([self.hydrator[i] for i in ids], suffix, False)
 
-    def intangible_subgraph(self, nodes, suffix):
-        return IntangibleSubgraph(nodes, self.index + suffix)
+    def intangible_subgraph(self, nodes, suffix, hashed):
+        return IntangibleSubgraph(nodes, self.index + suffix, hashed)
 
-    def intangible_subgraph_from_compact(self, ids, suffix):
-        return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
+    def intangible_subgraph_from_compact(self, ids, suffix, hashed):
+        return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix, hashed)
 
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
@@ -121,11 +128,11 @@ class Graph:
 
     @staticmethod
     def from_space_edgelist(filepath: str, index=""):
-        return Graph(nk.graphio.readGraph(filepath, nk.Format.EdgeListSpaceZero), index)
+        return Graph(nk.graphio.readGraph(filepath, nk.Format.EdgeListSpaceZero), index, False)
 
     @staticmethod
     def from_erdos_renyi(n, p, index=""):
-        return Graph(nk.generators.ErdosRenyiGenerator(n, p).generate(), index)
+        return Graph(nk.generators.ErdosRenyiGenerator(n, p).generate(), index, False)
 
     @staticmethod
     def from_edges(edges: List[Tuple[int, int]], index=""):
@@ -133,7 +140,7 @@ class Graph:
         g = nk.graph.Graph(n)
         for u, v in edges:
             g.addEdge(u, v)
-        return Graph(g, index)
+        return Graph(g, index, False)
 
     @staticmethod
     def from_straight_line(n: int, index=""):
@@ -146,7 +153,7 @@ class Graph:
         )
 
     def to_intangible(self, graph):
-        return IntangibleSubgraph(list(self.nodes()), self.index)
+        return IntangibleSubgraph(list(self.nodes()), self.index, self.hashed)
 
     def to_igraph(self):
         import igraph as ig
@@ -163,10 +170,16 @@ class IntangibleSubgraph:
 
     nodes: List[int]
     index: str
+    hashed: bool
+
+    def __post_init__(self):
+        if(not self.hashed):
+            self.index = hashlib.sha256(self.index.encode("utf-8")).hexdigest()
+            self.hashed = True
 
     def realize(self, graph: Graph) -> Graph:
         """Realize the subgraph"""
-        return graph.induced_subgraph(self.nodes, self.index)
+        return graph.induced_subgraph(self.nodes, self.index, self.hashed)
 
     def __len__(self):
         return len(self.nodes)
@@ -181,7 +194,7 @@ class IntangibleSubgraph:
         clusters: Dict[str, IntangibleSubgraph] = {}
         for node, cluster in pairs:
             if cluster not in clusters:
-                clusters[cluster] = IntangibleSubgraph([], cluster)
+                clusters[cluster] = IntangibleSubgraph([], cluster, False)
             clusters[cluster].nodes.append(node)
         res = list(v for v in clusters.values() if v.n() > 0)
         if not res:

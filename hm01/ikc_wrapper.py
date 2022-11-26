@@ -73,7 +73,7 @@ class IkcClusterer(AbstractClusterer):
                 for local_id in local_cluster_member_arr
             ]
             yield graph.intangible_subgraph(
-                global_cluster_member_arr, str(local_cluster_id)
+                global_cluster_member_arr, str(local_cluster_id), False
             )
         # return retarr
 

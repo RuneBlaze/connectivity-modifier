@@ -181,7 +181,7 @@ def main(
         m=nk_graph.numberOfEdges(),
         elapsed=time.time() - time1,
     )
-    root_graph = Graph(nk_graph, "")
+    root_graph = Graph(nk_graph, "", False)
     if not existing_clustering:
         log.info(
             f"running first round of clustering before algorithm-g", clusterer=clusterer
