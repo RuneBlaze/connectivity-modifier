@@ -3,6 +3,7 @@ from tomli import load
 import os
 import atexit
 import shutil
+import hashlib
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -60,7 +61,7 @@ class Context:
         return self._working_dir
 
     def request_graph_related_path(self, graph, suffix):
-        return os.path.join(self.working_dir, graph.index + "." + suffix)
+        return os.path.join(self.working_dir, hashlib.sha256(graph.index.encode("utf-8")).hexdigest() + "." + suffix)
 
 
 # we export the context as a singleton
