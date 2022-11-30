@@ -72,9 +72,6 @@ def algorithm_g(
         if intangible_graph.n() <= 1:
             continue
         graph = intangible_graph.realize(global_graph)
-        # if graph.n() == graph.m() + 1:
-        #     log.debug("graph is a tree, not interested")
-        #     continue
         tree_node = node_mapping[graph.index]
         log = log.bind(
             g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()

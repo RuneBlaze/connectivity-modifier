@@ -59,6 +59,7 @@ class ClusteringSkeleton:
                 if n.label != g.index:
                     descendants.append(n.label)
             ans.append(ClusteringSkeleton(g.index, list(g.nodes), info.cut_size if info else 1, descendants))
+        ans.sort(key=lambda x: (len(x.descendants), len(x.nodes)), reverse=True)
         return ans
 
     @staticmethod
