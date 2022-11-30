@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import os
 from typing import List, Optional, Sequence, Union
 import typing
@@ -8,6 +8,7 @@ import jsonpickle
 import treeswift as ts
 import numpy as np
 import pandas as pd
+import json
 from structlog import get_logger
 
 from hm01.basics import Graph, IntangibleSubgraph
@@ -37,7 +38,40 @@ def read_clusters_from_leiden(filepath: str) -> List[IntangibleSubgraph]:
     clusterer = LeidenClusterer(1)
     return clusterer.from_existing_clustering(filepath)
 
+@dataclass
+class ClusteringSkeleton:
+    label: str
+    nodes: List[int]
+    connectivity: int
+    descendants: List[str]
 
+    @staticmethod
+    def from_graphs( global_graph: Graph, graphs: List[IntangibleSubgraph], metadata: ClusteringMetadata) -> List[ClusteringSkeleton]:
+        ans = []
+        for g in graphs:
+            info = metadata.find_info(g)
+            if info:
+                # hack because I accidentally left out the ``cut_size'' attribute when pruning
+                if not hasattr(info, "cut_size"):
+                    info.cut_size = g.count_mcd(global_graph)
+            descendants = []
+            for n in info.traverse_leaves():
+                if n.label != g.index:
+                    descendants.append(n.label)
+            ans.append(ClusteringSkeleton(g.index, list(g.nodes), info.cut_size if info else 1, descendants))
+        return ans
+
+    @staticmethod
+    def write_ndjson(graphs: List[ClusteringSkeleton], filepath: str):
+        use_descendants = False
+        if any(g.descendants for g in graphs):
+            use_descendants = True
+        with open(filepath, "w+") as f:
+            for g in graphs:
+                d = asdict(g)
+                if not use_descendants:
+                    del d["descendants"]
+                f.write(json.dumps(d) + "\n")
 @dataclass
 class ClusteringStats:
     num_clusters: int
@@ -143,24 +177,10 @@ def main(
     extant_clusters = [
         IntangibleSubgraph(n.nodes, n.label) for n in tree.traverse_leaves() if n.extant
     ]
-    log.info(
-        "loaded clusters",
-        num_original_clusters=len(original_clusters),
-        num_extant_clusters=len(extant_clusters),
-    )
-    stat1 = ClusteringStats.from_list_of_graphs(graph, original_clusters, metadata)
-    stat2 = ClusteringStats.from_list_of_graphs(graph, extant_clusters, metadata)
-    log.info("done calculating")
-    stat3 = None
-    if ancient_clustering_path:
-        log.info("loading ancient clustering")
-        ancient_clusters = read_clusters_from_leiden(ancient_clustering_path)
-        stat3 = ClusteringStats.from_list_of_graphs(graph, ancient_clusters, metadata)
-        log.info("done additional calculating")
-    stat1.to_stats(graph).to_csv(output + ".original.csv", index=False)
-    stat2.to_stats(graph).to_csv(output + ".extant.csv", index=False)
-    if stat3:
-        stat3.to_stats(graph).to_csv(output + ".ancient.csv", index=False)
+    original_skeletons = ClusteringSkeleton.from_graphs(graph, original_clusters, metadata)
+    extant_skeletons = ClusteringSkeleton.from_graphs(graph, extant_clusters, metadata)
+    ClusteringSkeleton.write_ndjson(original_skeletons, output + ".original.json")
+    ClusteringSkeleton.write_ndjson(extant_skeletons, output + ".extant.json")
 
 
 def entry_point():
