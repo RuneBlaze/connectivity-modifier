@@ -7,7 +7,7 @@ import math
 import time
 from collections import deque
 from hm01.basics import Graph, IntangibleSubgraph
-from hm01.leiden_wrapper import LeidenClusterer
+from hm01.leiden_wrapper import LeidenClusterer, Quality
 from itertools import chain
 import treeswift as ts
 import networkit as nk
@@ -23,6 +23,7 @@ from .pruner import prune_graph
 class ClustererSpec(str, Enum):
     leiden = "leiden"
     ikc = "ikc"
+    leiden_mod = "leiden_mod"
 
 
 def summarize_graphs(graphs: List[IntangibleSubgraph]) -> str:
@@ -185,12 +186,15 @@ def main(
     if clusterer_spec == ClustererSpec.leiden:
         assert resolution != -1
         clusterer: Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
+    elif clusterer_spec == ClustererSpec.leiden_mod:
+        assert resolution == 1, "Leiden with modularity does not support resolution"
+        clusterer = LeidenClusterer(resolution, quality=Quality.modularity)
     else:
         assert k != -1
         clusterer = IkcClusterer(k)
     log = get_logger()
     context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
-    log.info(f"starting hm01", input=input, working_dir=context.working_dir)
+    log.info(f"starting hm01", input=input, working_dir=context.working_dir, clusterer=clusterer)
     requirement = MincutRequirement.try_from_str(threshold)
     log.info(f"parsed connectivity requirement", requirement=requirement)
     filterer = ClusterIgnoreFilter(ignore_trees, ignore_smaller_than)

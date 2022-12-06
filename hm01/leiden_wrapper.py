@@ -2,18 +2,28 @@ from dataclasses import dataclass
 from typing import Dict, Iterator, List
 from hm01.basics import Graph, IntangibleSubgraph
 from hm01.types import AbstractClusterer
+from enum import Enum
 import leidenalg as la
 
+class Quality(str, Enum):
+    cpm = "cpm"
+    modularity = "mod"
 
 @dataclass
 class LeidenClusterer(AbstractClusterer):
     resolution: float
+    quality: Quality = Quality.cpm
 
     def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
         g = graph.to_igraph()
-        partition = la.find_partition(
-            g, la.CPMVertexPartition, resolution_parameter=self.resolution
-        )
+        if self.quality == Quality.cpm:
+            partition = la.find_partition(
+                g, la.CPMVertexPartition, resolution_parameter=self.resolution
+            )
+        else:
+            partition = la.find_partition(
+                g, la.ModularityVertexPartition
+            )
         for i in range(len(partition)):
             nodes = partition[i]
             yield graph.intangible_subgraph_from_compact(nodes, f"{i+1}")

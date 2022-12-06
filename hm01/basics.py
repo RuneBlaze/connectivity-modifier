@@ -31,16 +31,16 @@ class Graph:
         nk_graph = edgelist_reader.read(path)
         return Graph.from_nk(nk_graph)
 
-    def n(self):
+    def n(self) -> int:
         """Number of nodes"""
         return self.data.numberOfNodes()
 
-    def m(self):
+    def m(self) -> int:
         """Number of edges"""
         return self.data.numberOfEdges()
 
     @cache
-    def mcd(self):
+    def mcd(self) -> int:
         if self.n() == 0:
             return 0
         return min(self.data.degree(n) for n in self.data.iterNodes())
@@ -61,11 +61,11 @@ class Graph:
         else:
             return clusterer.cluster_without_singletons(self)
 
-    def find_mincut(self):
+    def find_mincut(self) -> mincut.MincutResult:
         """Find a mincut wrapped over Viecut"""
         return mincut.viecut(self)
 
-    def cut_by_mincut(self, mincut_res: 'mincut.MincutResult') -> Tuple[Graph, Graph]:
+    def cut_by_mincut(self, mincut_res: mincut.MincutResult) -> Tuple[Graph, Graph]:
         """Cut the graph by the mincut result"""
         light = self.induced_subgraph(mincut_res.light_partition, "a")
         heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
@@ -94,6 +94,7 @@ class Graph:
         return IntangibleSubgraph(nodes, self.index + suffix)
 
     def intangible_subgraph_from_compact(self, ids : List[int], suffix : str):
+        """Create an intangible subgraph from a list of ids that represent nodes in the compacted (i.e., made continuous) graph"""
         return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
 
     def as_compact_edgelist_filepath(self):
