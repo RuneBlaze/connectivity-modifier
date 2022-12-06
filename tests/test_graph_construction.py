@@ -33,3 +33,14 @@ def test_basic_graph_format_conversion(context):
     # both files should also be readable and not empty
     assert os.path.getsize(graph.as_compact_edgelist_filepath()) > 0
     assert os.path.getsize(graph.as_metis_filepath()) > 0
+
+def test_graph_tree_like(context):
+    g = Graph.from_straight_line(10)
+    clus = g.intangible_subgraph([0, 1, 2, 3, 4], "test")
+    assert clus.is_tree_like(g)
+
+def test_graph_not_tree_like(context):
+    g = Graph.from_clique(10)
+    clus = g.intangible_subgraph([0, 1, 2, 3, 4], "test")
+    assert not clus.is_tree_like(g)
+    assert g.intangible_subgraph([0,1], "test").is_tree_like(g)

@@ -65,7 +65,7 @@ class Graph:
         """Find a mincut wrapped over Viecut"""
         return mincut.viecut(self)
 
-    def cut_by_mincut(self, mincut_res) -> Tuple[Graph, Graph]:
+    def cut_by_mincut(self, mincut_res: 'mincut.MincutResult') -> Tuple[Graph, Graph]:
         """Cut the graph by the mincut result"""
         light = self.induced_subgraph(mincut_res.light_partition, "a")
         heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
@@ -81,19 +81,19 @@ class Graph:
             hydrator[new_id] = old_id
         self.hydrator = hydrator
 
-    def induced_subgraph(self, ids, suffix):
+    def induced_subgraph(self, ids : List[int], suffix : str):
         assert suffix != "", "Suffix cannot be empty"
         data = nk.graphtools.subgraphFromNodes(self.data, ids)
         index = self.index + suffix
         return Graph(data, index)
 
-    def induced_subgraph_from_compact(self, ids, suffix):
+    def induced_subgraph_from_compact(self, ids : List[int], suffix : str):
         return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
 
-    def intangible_subgraph(self, nodes, suffix):
+    def intangible_subgraph(self, nodes : List[int], suffix : str):
         return IntangibleSubgraph(nodes, self.index + suffix)
 
-    def intangible_subgraph_from_compact(self, ids, suffix):
+    def intangible_subgraph_from_compact(self, ids : List[int], suffix : str):
         return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
 
     def as_compact_edgelist_filepath(self):
@@ -137,6 +137,7 @@ class Graph:
 
     @staticmethod
     def from_straight_line(n: int, index=""):
+        """A linked-list graph with n nodes"""
         return Graph.from_edges([(i, i + 1) for i in range(n - 1)], index)
 
     @staticmethod
@@ -208,3 +209,8 @@ class IntangibleSubgraph:
         if self.n() == 0:
             return 0
         return min(self.internal_degree(u, graph) for u in self.nodes)
+    
+    def is_tree_like(self, global_graph : Graph) -> bool:
+        m = self.count_edges(global_graph)
+        n = self.n()
+        return m == n - 1

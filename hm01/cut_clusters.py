@@ -40,12 +40,28 @@ def annotate_tree_node(node: ts.Node, graph: Union[Graph, IntangibleSubgraph]):
     node.num_nodes = graph.n()
     node.extant = False
 
+@dataclass
+class ClusterIgnoreFilter:
+    ignore_trees: bool
+    ignore_smaller_than: int
+
+    def __call__(self, cluster: IntangibleSubgraph, global_graph: Graph) -> bool:
+        if self.ignore_trees and cluster.is_tree_like(global_graph) == 1:
+            return True
+        if self.ignore_smaller_than > 0 and cluster.n() < self.ignore_smaller_than:
+            return True
+        return False
+
+    @staticmethod
+    def default() -> ClusterIgnoreFilter:
+        return ClusterIgnoreFilter(False, 0)
 
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
+    filterer: ClusterIgnoreFilter = ClusterIgnoreFilter.default(),
 ) -> Tuple[List[IntangibleSubgraph], Dict[int, str], ts.Tree]:
     log = get_logger()
     tree = ts.Tree()
@@ -58,7 +74,7 @@ def algorithm_g(
         node_mapping[g.index] = n
     queue: Deque[IntangibleSubgraph] = deque(graphs)
     log.info("starting algorithm-g", queue_size=len(queue))
-    ans = []
+    ans: List[IntangibleSubgraph] = []
     node2cids = {}
     while queue:
         log = get_logger()
@@ -71,6 +87,10 @@ def algorithm_g(
         )
         if intangible_graph.n() <= 1:
             continue
+        if filterer(intangible_graph, global_graph):
+            log.debug("filtered graph", graph_index=intangible_graph.index)
+            ans.append(intangible_graph)
+            continue
         graph = intangible_graph.realize(global_graph)
         tree_node = node_mapping[graph.index]
         log = log.bind(
@@ -78,6 +98,9 @@ def algorithm_g(
         )
         num_pruned = prune_graph(graph, requirement, clusterer)
         if num_pruned > 0:
+            log = log.bind(
+                g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
+            )
             log.info("pruned graph", num_pruned=num_pruned)
             new_child = ts.Node()
             graph.index = f"{graph.index}δ"
@@ -85,9 +108,6 @@ def algorithm_g(
             tree_node.add_child(new_child)
             node_mapping[graph.index] = new_child
             tree_node = new_child
-            log = log.bind(
-                g_id=graph.index, g_n=graph.n(), g_m=graph.m(), g_mcd=graph.mcd()
-            )
         for n in graph.nodes():
             node2cids[n] = graph.index
         mincut_res = graph.find_mincut()
@@ -145,6 +165,8 @@ def algorithm_g(
     return ans, node2cids, tree
 
 
+
+
 def main(
     input: str = typer.Option(..., "--input", "-i"),
     working_dir: Optional[str] = typer.Option("", "--working-dir", "-d"),
@@ -156,6 +178,8 @@ def main(
     resolution: float = typer.Option(-1, "--resolution", "-g"),
     threshold: str = typer.Option("", "--threshold", "-t"),
     output: Optional[str] = typer.Option(None, "--output", "-o"),
+    ignore_trees: bool = typer.Option(False, "--ignore-trees", "-x"),
+    ignore_smaller_than: int = typer.Option(0, "--ignore-smaller-than", "-s"),
 ):
     """Connectivity-Modifier (CM). Take a network and cluster it ensuring cut validity"""
     if clusterer_spec == ClustererSpec.leiden:
@@ -169,6 +193,8 @@ def main(
     log.info(f"starting hm01", input=input, working_dir=context.working_dir)
     requirement = MincutRequirement.try_from_str(threshold)
     log.info(f"parsed connectivity requirement", requirement=requirement)
+    filterer = ClusterIgnoreFilter(ignore_trees, ignore_smaller_than)
+    log.info(f"parsed cluster filter", filterer=filterer)
     time1 = time.time()
     edgelist_reader = nk.graphio.EdgeListReader("\t", 0)
     nk_graph = edgelist_reader.read(input)
@@ -193,7 +219,7 @@ def main(
         summary=summarize_graphs(clusters),
     )
     new_clusters, labels, tree = algorithm_g(
-        root_graph, clusters, clusterer, requirement
+        root_graph, clusters, clusterer, requirement, filterer
     )
     if output:
         with open(output, "w") as f:

@@ -26,7 +26,7 @@ class MincutRequirement:
     def validity_threshold(
         self, clusterer: AbstractClusterer, cluster, mcd_override: Optional[int] = None
     ) -> float:
-        log10 = math.log10(cluster.n())
+        log10 = math.log10(cluster.n()) if cluster.n() > 0 else 0
         mcd = cluster.mcd() if mcd_override is None else mcd_override
         k = clusterer.k if isinstance(clusterer, IkcClusterer) else 0
         return self.log10 * log10 + self.mcd * mcd + self.k * k + self.constant
