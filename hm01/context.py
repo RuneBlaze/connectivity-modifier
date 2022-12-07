@@ -61,7 +61,10 @@ class Context:
         return self._working_dir
 
     def request_graph_related_path(self, graph, suffix):
-        return os.path.join(self.working_dir, hashlib.sha256(graph.index.encode("utf-8")).hexdigest() + "." + suffix)
+        return os.path.join(
+            self.working_dir,
+            hashlib.sha256(graph.index.encode("utf-8")).hexdigest() + "." + suffix,
+        )
 
 
 # we export the context as a singleton

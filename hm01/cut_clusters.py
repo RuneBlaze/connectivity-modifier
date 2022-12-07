@@ -41,6 +41,7 @@ def annotate_tree_node(node: ts.Node, graph: Union[Graph, IntangibleSubgraph]):
     node.num_nodes = graph.n()
     node.extant = False
 
+
 @dataclass
 class ClusterIgnoreFilter:
     ignore_trees: bool
@@ -56,6 +57,7 @@ class ClusterIgnoreFilter:
     @staticmethod
     def default() -> ClusterIgnoreFilter:
         return ClusterIgnoreFilter(False, 0)
+
 
 def algorithm_g(
     global_graph: Graph,
@@ -161,11 +163,12 @@ def algorithm_g(
                 log.info("cut valid, not splitting anymore")
             else:
                 node_mapping[graph.index].extant = False
-                log.info("cut valid, but modularity non-positive, thrown away", modularity=mod)
+                log.info(
+                    "cut valid, but modularity non-positive, thrown away",
+                    modularity=mod,
+                )
         del graph.data
     return ans, node2cids, tree
-
-
 
 
 def main(
@@ -178,7 +181,7 @@ def main(
     k: int = typer.Option(-1, "--k", "-k"),
     resolution: float = typer.Option(-1, "--resolution", "-g"),
     threshold: str = typer.Option("", "--threshold", "-t"),
-    output: Optional[str] = typer.Option(None, "--output", "-o"),
+    output: str = typer.Option("", "--output", "-o"),
     ignore_trees: bool = typer.Option(False, "--ignore-trees", "-x"),
     ignore_smaller_than: int = typer.Option(0, "--ignore-smaller-than", "-s"),
 ):
@@ -187,14 +190,19 @@ def main(
         assert resolution != -1
         clusterer: Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
     elif clusterer_spec == ClustererSpec.leiden_mod:
-        assert resolution == 1, "Leiden with modularity does not support resolution"
+        assert resolution == -1, "Leiden with modularity does not support resolution"
         clusterer = LeidenClusterer(resolution, quality=Quality.modularity)
     else:
         assert k != -1
         clusterer = IkcClusterer(k)
     log = get_logger()
     context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
-    log.info(f"starting hm01", input=input, working_dir=context.working_dir, clusterer=clusterer)
+    log.info(
+        f"starting hm01",
+        input=input,
+        working_dir=context.working_dir,
+        clusterer=clusterer,
+    )
     requirement = MincutRequirement.try_from_str(threshold)
     log.info(f"parsed connectivity requirement", requirement=requirement)
     filterer = ClusterIgnoreFilter(ignore_trees, ignore_smaller_than)
@@ -225,15 +233,11 @@ def main(
     new_clusters, labels, tree = algorithm_g(
         root_graph, clusters, clusterer, requirement, filterer
     )
-    if output:
-        with open(output, "w") as f:
-            for n, cid in labels.items():
-                f.write(f"{n} {cid}\n")
-        with open(output + ".tree.json", "w+") as f:
-            f.write(jsonpickle.encode(tree))
-    else:
+    with open(output, "w+") as f:
         for n, cid in labels.items():
-            print(f"{n} {cid}")
+            f.write(f"{n} {cid}\n")
+    with open(output + ".tree.json", "w+") as f:
+        f.write(jsonpickle.encode(tree))
 
 
 def entry_point():

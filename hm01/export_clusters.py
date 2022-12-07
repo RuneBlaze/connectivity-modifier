@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 # export clusters to the belinda expected format
 from typing import List, Optional, Sequence, Union
 import typer
+
 
 def main(
     input: str = typer.Option(..., "--input", "-i"),

@@ -5,9 +5,11 @@ from hm01.types import AbstractClusterer
 from enum import Enum
 import leidenalg as la
 
+
 class Quality(str, Enum):
     cpm = "cpm"
     modularity = "mod"
+
 
 @dataclass
 class LeidenClusterer(AbstractClusterer):
@@ -21,9 +23,7 @@ class LeidenClusterer(AbstractClusterer):
                 g, la.CPMVertexPartition, resolution_parameter=self.resolution
             )
         else:
-            partition = la.find_partition(
-                g, la.ModularityVertexPartition
-            )
+            partition = la.find_partition(g, la.ModularityVertexPartition)
         for i in range(len(partition)):
             nodes = partition[i]
             yield graph.intangible_subgraph_from_compact(nodes, f"{i+1}")

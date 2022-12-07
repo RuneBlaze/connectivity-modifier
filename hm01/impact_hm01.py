@@ -38,6 +38,7 @@ def read_clusters_from_leiden(filepath: str) -> List[IntangibleSubgraph]:
     clusterer = LeidenClusterer(1)
     return clusterer.from_existing_clustering(filepath)
 
+
 @dataclass
 class ClusteringSkeleton:
     label: str
@@ -46,7 +47,11 @@ class ClusteringSkeleton:
     descendants: List[str]
 
     @staticmethod
-    def from_graphs( global_graph: Graph, graphs: List[IntangibleSubgraph], metadata: ClusteringMetadata) -> List[ClusteringSkeleton]:
+    def from_graphs(
+        global_graph: Graph,
+        graphs: List[IntangibleSubgraph],
+        metadata: ClusteringMetadata,
+    ) -> List[ClusteringSkeleton]:
         ans = []
         for g in graphs:
             info = metadata.find_info(g)
@@ -58,7 +63,11 @@ class ClusteringSkeleton:
             for n in info.traverse_leaves():
                 if n.label != g.index:
                     descendants.append(n.label)
-            ans.append(ClusteringSkeleton(g.index, list(g.nodes), info.cut_size if info else 1, descendants))
+            ans.append(
+                ClusteringSkeleton(
+                    g.index, list(g.nodes), info.cut_size if info else 1, descendants
+                )
+            )
         ans.sort(key=lambda x: (len(x.descendants), len(x.nodes)), reverse=True)
         return ans
 
@@ -73,6 +82,8 @@ class ClusteringSkeleton:
                 if not use_descendants:
                     del d["descendants"]
                 f.write(json.dumps(d) + "\n")
+
+
 @dataclass
 class ClusteringStats:
     num_clusters: int
@@ -178,7 +189,9 @@ def main(
     extant_clusters = [
         IntangibleSubgraph(n.nodes, n.label) for n in tree.traverse_leaves() if n.extant
     ]
-    original_skeletons = ClusteringSkeleton.from_graphs(graph, original_clusters, metadata)
+    original_skeletons = ClusteringSkeleton.from_graphs(
+        graph, original_clusters, metadata
+    )
     extant_skeletons = ClusteringSkeleton.from_graphs(graph, extant_clusters, metadata)
     ClusteringSkeleton.write_ndjson(original_skeletons, output + ".original.json")
     ClusteringSkeleton.write_ndjson(extant_skeletons, output + ".extant.json")

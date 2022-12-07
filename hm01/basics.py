@@ -81,19 +81,19 @@ class Graph:
             hydrator[new_id] = old_id
         self.hydrator = hydrator
 
-    def induced_subgraph(self, ids : List[int], suffix : str):
+    def induced_subgraph(self, ids: List[int], suffix: str):
         assert suffix != "", "Suffix cannot be empty"
         data = nk.graphtools.subgraphFromNodes(self.data, ids)
         index = self.index + suffix
         return Graph(data, index)
 
-    def induced_subgraph_from_compact(self, ids : List[int], suffix : str):
+    def induced_subgraph_from_compact(self, ids: List[int], suffix: str):
         return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
 
-    def intangible_subgraph(self, nodes : List[int], suffix : str):
+    def intangible_subgraph(self, nodes: List[int], suffix: str):
         return IntangibleSubgraph(nodes, self.index + suffix)
 
-    def intangible_subgraph_from_compact(self, ids : List[int], suffix : str):
+    def intangible_subgraph_from_compact(self, ids: List[int], suffix: str):
         """Create an intangible subgraph from a list of ids that represent nodes in the compacted (i.e., made continuous) graph"""
         return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
 
@@ -113,7 +113,7 @@ class Graph:
         """Iterate over the nodes"""
         return self.data.iterNodes()
 
-    def modularity_of(self, g : IntangibleSubgraph) -> float:
+    def modularity_of(self, g: IntangibleSubgraph) -> float:
         """calculate the modularity of the subset `g` with respect to `self`"""
         ls = g.count_edges(self)
         big_l = self.m()
@@ -193,25 +193,25 @@ class IntangibleSubgraph:
     @cached_property
     def nodeset(self):
         return set(self.nodes)
-    
-    def edges(self, graph : Graph) -> Iterator[Tuple[int, int]]:
+
+    def edges(self, graph: Graph) -> Iterator[Tuple[int, int]]:
         for n in self.nodes:
             for e in graph.data.iterNeighbors(n):
                 if e in self.nodeset:
                     yield n, e
-    
-    def count_edges(self, global_graph : Graph):
+
+    def count_edges(self, global_graph: Graph):
         return sum(1 for _ in self.edges(global_graph)) // 2
 
-    def internal_degree(self, u, graph : Graph) -> int:
+    def internal_degree(self, u, graph: Graph) -> int:
         return sum(1 for v in graph.data.iterNeighbors(u) if v in self.nodeset)
 
-    def count_mcd(self, graph : Graph) -> int:
+    def count_mcd(self, graph: Graph) -> int:
         if self.n() == 0:
             return 0
         return min(self.internal_degree(u, graph) for u in self.nodes)
-    
-    def is_tree_like(self, global_graph : Graph) -> bool:
+
+    def is_tree_like(self, global_graph: Graph) -> bool:
         m = self.count_edges(global_graph)
         n = self.n()
         return m == n - 1
