@@ -1,12 +1,15 @@
 [tool.poetry]
-name = "hm01"
-version = "0.1.0"
-description = ""
+name = "connectivity-modifier"
+version = "0.1.0-alpha.0"
+description = "connectivity modifier"
+packages = [
+	{ include = "hm01" }
+]
 authors = ["runeblaze <runeblaze@excite.co.jp>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 networkit = "^10.0"
 pytest = "^7.1.3"
 numpy = "^1.23.3"
@@ -24,8 +27,8 @@ typing-extensions = "^4.4.0"
 HeapDict = "^1.0.1"
 
 [tool.poetry.scripts]
-hm01 = 'hm01.cut_clusters:entry_point'
-impact_hm01 = 'hm01.impact_hm01:entry_point'
+cm = 'hm01.cut_clusters:entry_point'
+cm2universal = 'hm01.impact_hm01:entry_point'
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.982"

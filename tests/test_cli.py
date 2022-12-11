@@ -12,7 +12,8 @@ def test_mincut_requirement_parsing():
     assert MincutRequirement(1,2,10,42) == MincutRequirement.try_from_str("2mcd+10k+1log10+42")
 
 def test_simple_algorithm_g(context):
-    graph = Graph.from_erdos_renyi(100, 0.3)
+    # FIXME: this is a flaky test. With low probability, it fails.
+    graph = Graph.from_erdos_renyi(100, 0.8)
     clusterer = IkcClusterer(1)
     clusters = list(clusterer.cluster(graph))
     clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())

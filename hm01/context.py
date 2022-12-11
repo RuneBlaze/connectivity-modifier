@@ -36,8 +36,8 @@ class Context:
     @cached_property
     def config(self):
         lookup_paths = [
-            "hm01.toml",
-            os.path.join(os.path.expanduser("~"), ".config", "hm01", "config.toml"),
+            "cm.toml",
+            os.path.join(os.path.expanduser("~"), ".config", "cm", "config.toml"),
             os.path.join(os.path.dirname(__file__), "..", "default_config.toml"),
         ]
         for path in lookup_paths:
