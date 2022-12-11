@@ -54,7 +54,7 @@ The clusterer to be paired with. If using with an existing clustering (`-e`), th
  - `ikc`: Iterative k-core, must specify `-k` later
  - `leiden_mod`: Leiden with modularity optimization, no other parameters allowed to be specified
 
-### -e, --existing-clustering CLUSTERING_FILE
+### `-e, --existing-clustering CLUSTERING_FILE`
 
 Specifies the starting clustering (in effect saving time for `cm` to reproduce the initial clustering) to be `modified` to have sufficient connectivity thresholds (c.f. `-t`). The file format is "native" to the clustering method. For example, for IKC, it is the default IKC csv output format. For Leiden, it is the Leiden output format (i.e., tab-delimited node_id cluster_id file).
 
