@@ -1,10 +1,8 @@
 # cm
 
 Connectivity Modifier (CM) is a generic meta-method for community detection while ensuring a certain connectivity
-(global minimum cut size) bound on the output communities (clusters). To be more precise, suppose that you want
-to ensure that Leiden clusters must not be "easily-cut", for example, the minimum cut size $\lambda$ must
-be at least $\log_{10}(n)$, $n$ the size of any cluster, you can run CM paired with Leiden, and it will
-ensure that all output clusters have that minimum size cut.
+(minimum number of edges to remove to disconnect a community) on the output communities (clusters). To be more precise, suppose that you want to ensure that Leiden clusters must not be "easily-cut". For example, ensuring that none of the output clusters have connectivity below
+$\log_{10}(n)$, $n$ the size of any cluster, you can run CM paired with Leiden, and it will ensure that all output clusters have that minimum size cut. CM supports customizable requirements on the connectivity of the clusters. CM currently supports Leiden (CPM optimization), IKC, and Leiden (modularity optimization) out-of-the-box. After installing the necessary dependencies, users can simply run CM to obtain Leiden clusters with strong guarantees on connectivity.
 
 ## Installation
 
