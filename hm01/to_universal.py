@@ -11,9 +11,9 @@ import pandas as pd
 import json
 from structlog import get_logger
 
-from hm01.basics import Graph, IntangibleSubgraph
+from hm01.graph import Graph, IntangibleSubgraph
 from hm01.cm import ClusterTreeNode
-from .leiden_wrapper import LeidenClusterer
+from .clusterers.leiden_wrapper import LeidenClusterer
 
 
 class ClusteringMetadata:
