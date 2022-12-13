@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from hm01.connectivity_requirement import MincutRequirement
-from hm01.types import AbstractClusterer
-from .basics import Graph
+from hm01.mincut_requirement import MincutRequirement
+from hm01.clusterers.abstract_clusterer import AbstractClusterer
+from .graph import Graph
 from heapdict import heapdict
 
 
@@ -17,16 +17,16 @@ def prune_graph(
     deleted_nodes = 0
     degrees = heapdict()
     for node in graph.nodes():
-        degrees[node] = graph.data.degree(node)
+        degrees[node] = graph.degree(node)
     while degrees:
         node, degree = degrees.popitem()
         if degree > connectivity_requirement.validity_threshold(
             clusterer, graph, mcd_override=degree
         ):
             break
-        for neighbor in graph.data.iterNeighbors(node):
+        for neighbor in graph.neighbors(node):
             degrees[neighbor] -= 1
-        graph.data.removeNode(node)
+        graph.remove_node(node)
         deleted_nodes += 1
     graph.mcd.cache_clear()
     return deleted_nodes

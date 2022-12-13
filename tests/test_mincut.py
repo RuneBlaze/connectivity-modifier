@@ -1,5 +1,5 @@
 from hm01.mincut import run_viecut_command
-from hm01.basics import Graph
+from hm01.graph import Graph
 import networkit as nk
 GRAPH_RESULTS = [
     ("data/ring_four_k10s.edge_list", nk.Format.EdgeListSpaceZero, (20, 20, 2)),

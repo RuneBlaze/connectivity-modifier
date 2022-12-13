@@ -1,7 +1,7 @@
 import networkit as nk
 
-from hm01.basics import *
-from hm01.leiden_wrapper import LeidenClusterer
+from hm01.graph import *
+from hm01.clusterers.leiden_wrapper import LeidenClusterer
 
 # TODO: too much duplicate code
 def test_two_k5_two_clusters(context):
@@ -17,7 +17,7 @@ def test_two_k5_two_clusters_non_continuous(context):
     graph_nodes = set(graph.nodes())
     clusterer = LeidenClusterer(0.5)
     clusters = list(graph.find_clusters(clusterer, with_singletons=False))
-    cluster_nodes = set.union(*[set(c.nodes) for c in clusters])
+    cluster_nodes = set.union(*[set(c.subset) for c in clusters])
     assert len(clusters) == 2
     assert 999 in cluster_nodes
     assert cluster_nodes.issubset(graph_nodes)

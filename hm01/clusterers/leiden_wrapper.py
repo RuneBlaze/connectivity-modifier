@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Iterator, List
-from hm01.basics import Graph, IntangibleSubgraph
-from hm01.types import AbstractClusterer
+from hm01.graph import Graph, IntangibleSubgraph
+from hm01.clusterers.abstract_clusterer import AbstractClusterer
 from enum import Enum
 import leidenalg as la
 
@@ -36,5 +36,5 @@ class LeidenClusterer(AbstractClusterer):
                 node_id, cluster_id = line.split()
                 clusters.setdefault(
                     cluster_id, IntangibleSubgraph([], cluster_id)
-                ).nodes.append(int(node_id))
+                ).subset.append(int(node_id))
         return list(v for v in clusters.values() if v.n() > 1)

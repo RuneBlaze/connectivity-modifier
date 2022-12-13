@@ -1,6 +1,6 @@
-from hm01.basics import Graph
-from hm01.cut_clusters import MincutRequirement, algorithm_g
-from hm01.ikc_wrapper import IkcClusterer
+from hm01.graph import Graph
+from hm01.cm import MincutRequirement, algorithm_g
+from hm01.clusterers.ikc_wrapper import IkcClusterer
 
 def test_mincut_requirement_parsing():
     assert MincutRequirement(1,0,0,0) == MincutRequirement.try_from_str("1log10")

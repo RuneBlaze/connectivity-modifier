@@ -50,7 +50,7 @@ def run_viecut_command(metis_path, output_path, hydrator=None):
     lastline = res.stdout.splitlines()[-1]
     r_res = re.search(r"cut=(\d+)", lastline.decode("utf-8"))
     assert r_res, f"Could not find cut size in {lastline}"
-    cut_size = int(r_res.group(1))
+    cut_size = int(r_res.group(1), 10)
     if hydrator:
         hydrated_light = [hydrator[i] for i in light_partition]
         hydrated_heavy = [hydrator[i] for i in heavy_partition]

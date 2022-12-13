@@ -1,4 +1,4 @@
-from hm01.basics import *
+from hm01.graph import *
 import networkit as nk
 import os
 

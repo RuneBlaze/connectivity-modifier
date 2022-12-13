@@ -63,7 +63,7 @@ class Context:
     def request_graph_related_path(self, graph, suffix):
         return os.path.join(
             self.working_dir,
-            hashlib.sha256(graph.index.encode("utf-8")).hexdigest() + "." + suffix,
+            hashlib.sha256(graph.index.encode("utf-8")).hexdigest()[:10] + "." + suffix,
         )
 
 

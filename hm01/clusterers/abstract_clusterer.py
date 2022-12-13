@@ -3,15 +3,15 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Iterator, List, Protocol, Tuple, Union
 
-from hm01.basics import IntangibleSubgraph
+from hm01.graph import IntangibleSubgraph, Graph
 
 
 class AbstractClusterer(Protocol):
     @abstractmethod
-    def cluster(self, graph) -> Iterator[IntangibleSubgraph]:
+    def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
         raise NotImplementedError
 
-    def cluster_without_singletons(self, graph) -> Iterator[IntangibleSubgraph]:
+    def cluster_without_singletons(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
         for cluster in self.cluster(graph):
             if cluster.n() > 1:
                 yield cluster

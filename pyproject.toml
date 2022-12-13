@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "connectivity-modifier"
-version = "0.1.0-alpha.0"
+version = "0.1.0-alpha.1"
 description = "connectivity modifier"
 packages = [
 	{ include = "hm01" }
@@ -26,9 +26,13 @@ graphviz = "^0.20.1"
 typing-extensions = "^4.4.0"
 HeapDict = "^1.0.1"
 
+[tool.black]
+line-length = 88
+preview = true
+
 [tool.poetry.scripts]
-cm = 'hm01.cut_clusters:entry_point'
-cm2universal = 'hm01.impact_hm01:entry_point'
+cm = 'hm01.cm:entry_point'
+cm2universal = 'hm01.to_universal:entry_point'
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.982"

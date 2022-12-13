@@ -1,4 +1,4 @@
-from hm01.basics import *
+from hm01.graph import *
 
 def test_basic_modularity():
     graph = Graph.from_edges([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0)], "root")

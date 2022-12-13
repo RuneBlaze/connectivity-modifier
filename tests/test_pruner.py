@@ -1,7 +1,7 @@
-from hm01.basics import *
-from hm01.connectivity_requirement import MincutRequirement
+from hm01.graph import *
+from hm01.mincut_requirement import MincutRequirement
 from hm01.pruner import prune_graph
-from hm01.ikc_wrapper import IkcClusterer
+from hm01.clusterers.ikc_wrapper import IkcClusterer
 
 def test_not_pruning():
     clique = Graph.from_clique(10)

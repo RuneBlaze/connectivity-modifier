@@ -7,26 +7,22 @@ import csv
 
 import networkit as nk
 
-from hm01.types import AbstractClusterer
+from hm01.clusterers.abstract_clusterer import AbstractClusterer
 
-from .basics import Graph, IntangibleSubgraph
-from .context import context
+from hm01.graph import Graph, IntangibleSubgraph
+from hm01.context import context
 
 
 @dataclass
 class IkcClusterer(AbstractClusterer):
     k: int
 
-    def cluster(self, graph) -> Iterator[IntangibleSubgraph]:
+    def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
         """Returns a list of (labeled) subgraphs on the graph"""
         # retarr = []
-        output_prefix = context.request_graph_related_path(graph, "ikc")
-        Path(output_prefix).mkdir(
-            exist_ok=True
-        )  # should create a directory like "IKC_working_directory)
 
         global_name_networkit_graph = (
-            graph.data
+            graph._data
         )  # the networkit graph with non-translated node ids
         cluster_id = graph.index  # the cluster id such as 5a6b2
 
@@ -39,26 +35,26 @@ class IkcClusterer(AbstractClusterer):
         local_name_networkit_graph = nk.graphtools.getCompactedGraph(
             global_name_networkit_graph, old_to_new_node_id_mapping
         )
-        local_name_networkit_graph_filename = (
-            f"{output_prefix}/{cluster_id}.local_mapping.edge_list"
+        local_name_networkit_graph_filename = context.request_graph_related_path(
+            graph, "local.edgelist"
         )
         nk.writeGraph(
             local_name_networkit_graph,
             local_name_networkit_graph_filename,
             nk.Format.EdgeListTabZero,
         )
-
-        raw_ikc_clustering_output_filename = (
-            f"{output_prefix}/{cluster_id}.ikc_clusterting.raw"
+        raw_ikc_clustering_output_filename = context.request_graph_related_path(
+            graph, "ikc.raw"
         )
         self.run_ikc(
             local_name_networkit_graph_filename,
-            cluster_id,
-            output_prefix,
+            graph,
             raw_ikc_clustering_output_filename,
         )
 
-        ikc_clustering_output_filename = f"{output_prefix}/{cluster_id}.ikc_clusterting"
+        ikc_clustering_output_filename = context.request_graph_related_path(
+            graph, "ikc"
+        )
         self.parse_ikc_output(
             raw_ikc_clustering_output_filename, ikc_clustering_output_filename
         )
@@ -77,13 +73,13 @@ class IkcClusterer(AbstractClusterer):
             )
         # return retarr
 
-    def run_ikc(self, edge_list_path, cluster_id, output_prefix, output_file):
+    def run_ikc(self, edge_list_path, graph: Graph, output_file):
         """Runs IKC given an edge list and writes a CSV"""
         ikc_path = context.ikc_path
-        with open(f"{output_prefix}/{cluster_id}_ikc_k={self.k}.stderr", "w") as f_err:
-            with open(
-                f"{output_prefix}/{cluster_id}_ikc_k={self.k}.stdout", "w"
-            ) as f_out:
+        stderr_p = context.request_graph_related_path(graph, "_ikc_k={self.k}.stderr")
+        stdout_p = context.request_graph_related_path(graph, "_ikc_k={self.k}.stdout")
+        with open(stderr_p, "w") as f_err:
+            with open(stdout_p, "w") as f_out:
                 subprocess.run(
                     [
                         "/usr/bin/time",
@@ -134,5 +130,5 @@ class IkcClusterer(AbstractClusterer):
                 cluster_id = row[1]
                 if cluster_id not in clusters:
                     clusters[cluster_id] = IntangibleSubgraph([], cluster_id)
-                clusters[cluster_id].nodes.append(node_id)
+                clusters[cluster_id].subset.append(node_id)
         return list(clusters.values())
