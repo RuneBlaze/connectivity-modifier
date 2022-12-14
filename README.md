@@ -83,6 +83,12 @@ Threshold expression. `cm` guarantees that the output clustering all have cluste
 
 Entirely optional; specifies where `cm` should store its temporary files.
 
+### `--ignore-trees` & `--ignore-smaller-than INTEGER`
+
+Allows CM to skip processing trees (those clusters with nodes equals number of edges plus one) and
+those clusters that are smaller than the specified number. These clusters will be skipped for processing
+but included in the output.
+
 ## Example commands
 
 ```bash
