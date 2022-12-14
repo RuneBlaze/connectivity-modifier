@@ -22,7 +22,9 @@ class IkcClusterer(AbstractClusterer):
         cluster_id = graph.index  # the cluster id such as 5a6b2
 
         old_to_new_node_id_mapping = graph.continuous_ids
-        new_to_old_node_id_mapping = {v: k for k, v in old_to_new_node_id_mapping.items()}
+        new_to_old_node_id_mapping = {
+            v: k for k, v in old_to_new_node_id_mapping.items()
+        }
         raw_ikc_clustering_output_filename = context.request_graph_related_path(
             graph, "ikc.raw"
         )

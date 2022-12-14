@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing_extensions import Self
 import networkit as nk
-from typing import Dict, Iterator, List, Sequence, Tuple
+from collections import defaultdict
+from typing import Dict, Iterator, List, Sequence, Tuple, Union
 
 from hm01.clusterers.abstract_clusterer import AbstractClusterer
 from . import mincut
@@ -48,7 +49,7 @@ class Graph:
         return min(self._data.degree(n) for n in self._data.iterNodes())
 
     def find_clusters(
-        self, clusterer: AbstractClusterer, with_singletons: bool =True
+        self, clusterer: AbstractClusterer, with_singletons: bool = True
     ) -> Iterator[IntangibleSubgraph]:
         """Find clusters using the given clusterer"""
         log.info(
@@ -73,7 +74,9 @@ class Graph:
     def remove_node(self, u):
         self._data.removeNode(u)
 
-    def cut_by_mincut(self, mincut_res: mincut.MincutResult) -> Tuple[Graph, Graph]:
+    def cut_by_mincut(
+        self, mincut_res: mincut.MincutResult
+    ) -> Tuple[Union[Graph, RealizedSubgraph], Union[Graph, RealizedSubgraph]]:
         """Cut the graph by the mincut result"""
         light = self.induced_subgraph(mincut_res.light_partition, "a")
         heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
@@ -87,7 +90,7 @@ class Graph:
         """Hydrator: a mapping from the compacted id to the original id"""
         n = self.n()
         hydrator = [0] * n
-        continuous_ids = self.continuous_ids#.items()
+        continuous_ids = self.continuous_ids  # .items()
         assert len(continuous_ids) == n, f"Expected {n} ids, got {len(continuous_ids)}"
         for old_id, new_id in continuous_ids.items():
             hydrator[new_id] = old_id
@@ -176,6 +179,135 @@ class Graph:
         return ig.Graph(self.n(), edges)
 
 
+class RealizedSubgraph:
+    hydrator: List[int]  # mapping from compact id to original id
+    inv: Dict[int, int]  # mapping from original id to compact id
+    compacted: List[List[int]]
+    _dirty: bool
+    _graph: Graph
+
+    def __init__(self, intangible: IntangibleSubgraph, graph: Graph):
+        self.index = intangible.index
+        self.nodeset = intangible.nodeset
+        self.adj: Dict[int, set[int]] = {}
+        self._graph = graph
+        for n in intangible.nodes():
+            if n not in self.nodeset:
+                continue
+            if n not in self.adj:
+                self.adj[n] = set()
+            for m in graph.neighbors(n):
+                if m not in self.nodeset:
+                    continue
+                if m not in self.adj:
+                    self.adj[m] = set()
+                self.adj[n].add(m)
+
+        self._n = len(self.nodeset)
+        self._m = sum(len(self.adj[n]) for n in self.nodeset) // 2
+        self._dirty = True
+        # self.recompact()
+
+    def recompact(self):
+        unallocated = 0
+        hydrator: List[int] = []
+        inv: Dict[int, int] = {}
+        compacted: List[List[int]] = []
+        for n in self.nodeset:
+            hydrator.append(n)
+            if n not in inv:
+                inv[n] = unallocated
+                compacted.append([])
+                unallocated += 1
+            for m in self.adj[n]:
+                if m not in inv:
+                    hydrator.append(m)
+                    inv[m] = unallocated
+                    compacted.append([])
+                    unallocated += 1
+                compacted[inv[n]].append(inv[m])
+        self.hydrator = hydrator
+        self.inv = inv
+        self.compacted = compacted
+        self._dirty = False
+
+    def degree(self, u) -> int:
+        return len(self.adj[u])
+
+    def neighbors(self, u) -> Iterator[int]:
+        yield from self.adj[u]
+
+    def to_intangible(self, graph):
+        return IntangibleSubgraph(list(self.nodeset), self.index)
+
+    def remove_node(self, u):
+        self._n -= 1
+        self._m -= len(self.adj[u])
+        for v in self.adj[u]:
+            self.adj[v].remove(u)
+        del self.adj[u]
+        self.nodeset.remove(u)
+        self._dirty = True
+
+    def n(self):
+        return self._n
+
+    def m(self):
+        return self._m
+
+    def nodes(self):
+        yield from self.nodeset
+
+    @cache
+    def mcd(self) -> int:
+        if self.n() == 0:
+            return 0
+        return min(self.degree(n) for n in self.nodes())
+
+    def to_igraph(self):
+        if self._dirty:
+            self.recompact()
+        import igraph as ig
+
+        edges = []
+        for u in self.nodes():
+            for v in self.adj[u]:
+                if u > v:
+                    continue
+                edges.append((self.inv[u], self.inv[v]))
+        return ig.Graph(self.n(), edges)
+
+    def as_metis_filepath(self):
+        if self._dirty:
+            self.recompact()
+        p = context.request_graph_related_path(self, "metis")
+        with open(p, "w+") as f:
+            f.write(f"{self.n()} {self.m()}\n")
+            for u in self.compacted:
+                f.write(" ".join([str(v+1) for v in u]) + "\n")
+        return p
+
+    def as_compact_edgelist_filepath(self):
+        if self._dirty:
+            self.recompact()
+        p = context.request_graph_related_path(self, "edgelist")
+        with open(p, "w+") as f:
+            for u in self.compacted:
+                for i, v in enumerate(u):
+                    f.write(f"{i}\t{v}")
+        return p
+
+    def find_mincut(self) -> mincut.MincutResult:
+        return mincut.viecut(self)
+
+    def cut_by_mincut(
+        self, mincut_res: mincut.MincutResult
+    ) -> Tuple[Union[Graph, RealizedSubgraph], Union[Graph, RealizedSubgraph]]:
+        """Cut the graph by the mincut result"""
+        light = RealizedSubgraph(IntangibleSubgraph(mincut_res.light_partition, self.index + "a"), self._graph)
+        heavy = RealizedSubgraph(IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"), self._graph)
+        return light, heavy
+
 @dataclass
 class IntangibleSubgraph:
     """A yet to be realized subgraph, containing only the node ids"""
@@ -183,9 +315,9 @@ class IntangibleSubgraph:
     subset: List[int]
     index: str
 
-    def realize(self, graph: Graph) -> Graph:
+    def realize(self, graph: Graph) -> RealizedSubgraph:
         """Realize the subgraph"""
-        return graph.induced_subgraph(self.subset, self.index)
+        return RealizedSubgraph(self, graph)
 
     def __len__(self):
         return len(self.subset)

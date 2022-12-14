@@ -1,13 +1,13 @@
 from __future__ import annotations
+from hm01.graph import RealizedSubgraph
 
 from hm01.mincut_requirement import MincutRequirement
 from hm01.clusterers.abstract_clusterer import AbstractClusterer
-from .graph import Graph
 from heapdict import heapdict
 
 
 def prune_graph(
-    graph: Graph,
+    graph: RealizedSubgraph,
     connectivity_requirement: MincutRequirement,
     clusterer: AbstractClusterer,
 ) -> int:

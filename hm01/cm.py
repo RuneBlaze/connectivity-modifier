@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple, Union, Dict, Deque, cast
 import math
 import time
 from collections import deque
-from hm01.graph import Graph, IntangibleSubgraph
+from hm01.graph import Graph, IntangibleSubgraph, RealizedSubgraph
 from hm01.clusterers.leiden_wrapper import LeidenClusterer, Quality
 from itertools import chain
 import treeswift as ts
@@ -36,7 +36,9 @@ def summarize_graphs(graphs: List[IntangibleSubgraph]) -> str:
         return f"[{', '.join([g.index for g in graphs])}]({len(graphs)})"
 
 
-def annotate_tree_node(node: ClusterTreeNode, graph: Union[Graph, IntangibleSubgraph]):
+def annotate_tree_node(
+    node: ClusterTreeNode, graph: Union[Graph, IntangibleSubgraph, RealizedSubgraph]
+):
     node.label = graph.index
     node.graph_index = graph.index
     node.num_nodes = graph.n()
@@ -61,7 +63,8 @@ class ClusterIgnoreFilter:
 
 
 def update_cid_membership(
-    subgraph: Union[Graph, IntangibleSubgraph], node2cids: Dict[int, str]
+    subgraph: Union[Graph, IntangibleSubgraph, RealizedSubgraph],
+    node2cids: Dict[int, str],
 ):
     for n in subgraph.nodes():
         node2cids[n] = subgraph.index
@@ -192,7 +195,6 @@ def algorithm_g(
                     "cut valid, but modularity non-positive, thrown away",
                     modularity=mod,
                 )
-        del subgraph._data
     return ans, node2cids, tree
 
 
