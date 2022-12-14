@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from typing_extensions import Self
 import networkit as nk
 from typing import Dict, Iterator, List, Sequence, Tuple
+
+from hm01.clusterers.abstract_clusterer import AbstractClusterer
 from . import mincut
 from .context import context
 from structlog import get_logger
@@ -46,7 +48,7 @@ class Graph:
         return min(self._data.degree(n) for n in self._data.iterNodes())
 
     def find_clusters(
-        self, clusterer, with_singletons=True
+        self, clusterer: AbstractClusterer, with_singletons: bool =True
     ) -> Iterator[IntangibleSubgraph]:
         """Find clusters using the given clusterer"""
         log.info(
