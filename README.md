@@ -81,7 +81,8 @@ Threshold expression. `cm` guarantees that the output clustering all have cluste
 
 ### `-d, --working-dir TEXT`
 
-Entirely optional; specifies where `cm` should store its temporary files.
+Optional for throw-away runs; specifies where `cm` should store its temporary files. Prudently one
+should always specify different working directories for different runs under the same directory.
 
 ### `--ignore-trees` & `--ignore-smaller-than INTEGER`
 
@@ -103,6 +104,8 @@ cm -i graph.tsv -c leiden -g 0.1 -t 1log10 -o leiden_clus.txt
 # we additionally use an existing IKC clustering (ikc_output.csv) as the starting point to be modified
 cm -i graph.tsv -c ikc -k 10 -t 0.1mcd -e ikc_output.csv -o ikc_clus.txt
 ```
+
+Note that for serious runs, `-d` should also be specified to avoid overwriting temporary files.
 
 <!-- ```shell
 # clone the repo, and cd into the repo
