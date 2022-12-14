@@ -79,13 +79,17 @@ class Graph:
         heavy = self.induced_subgraph(mincut_res.heavy_partition, "b")
         return light, heavy
 
+    @cached_property
+    def continuous_ids(self):
+        return nk.graphtools.getContinuousNodeIds(self._data)
+
     def construct_hydrator(self):
         """Hydrator: a mapping from the compacted id to the original id"""
         n = self.n()
         hydrator = [0] * n
-        continuous_ids = nk.graphtools.getContinuousNodeIds(self._data).items()
+        continuous_ids = self.continuous_ids#.items()
         assert len(continuous_ids) == n, f"Expected {n} ids, got {len(continuous_ids)}"
-        for old_id, new_id in continuous_ids:
+        for old_id, new_id in continuous_ids.items():
             hydrator[new_id] = old_id
         self.hydrator = hydrator
 
@@ -109,7 +113,8 @@ class Graph:
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
         p = context.request_graph_related_path(self, "edgelist")
-        nk.graphio.writeGraph(self._data, p, nk.Format.EdgeListSpaceOne)
+        towrite = nk.graphtools.getCompactedGraph(self._data, self.continuous_ids)
+        nk.graphio.writeGraph(towrite, p, nk.Format.EdgeListTabZero)
         return p
 
     def degree(self, u):

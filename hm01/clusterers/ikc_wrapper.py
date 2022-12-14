@@ -19,35 +19,15 @@ class IkcClusterer(AbstractClusterer):
 
     def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
         """Returns a list of (labeled) subgraphs on the graph"""
-        # retarr = []
-
-        global_name_networkit_graph = (
-            graph._data
-        )  # the networkit graph with non-translated node ids
         cluster_id = graph.index  # the cluster id such as 5a6b2
 
-        old_to_new_node_id_mapping = nk.graphtools.getContinuousNodeIds(
-            global_name_networkit_graph
-        )
-        new_to_old_node_id_mapping = {
-            new_id: old_id for old_id, new_id in old_to_new_node_id_mapping.items()
-        }
-        local_name_networkit_graph = nk.graphtools.getCompactedGraph(
-            global_name_networkit_graph, old_to_new_node_id_mapping
-        )
-        local_name_networkit_graph_filename = context.request_graph_related_path(
-            graph, "local.edgelist"
-        )
-        nk.writeGraph(
-            local_name_networkit_graph,
-            local_name_networkit_graph_filename,
-            nk.Format.EdgeListTabZero,
-        )
+        old_to_new_node_id_mapping = graph.continuous_ids
+        new_to_old_node_id_mapping = {v: k for k, v in old_to_new_node_id_mapping.items()}
         raw_ikc_clustering_output_filename = context.request_graph_related_path(
             graph, "ikc.raw"
         )
         self.run_ikc(
-            local_name_networkit_graph_filename,
+            graph.as_compact_edgelist_filepath(),
             graph,
             raw_ikc_clustering_output_filename,
         )
