@@ -6,7 +6,7 @@ $\log_{10}(n)$, $n$ the size of any cluster, you can run CM paired with Leiden, 
 
 ## Installation
 
-Our software is provided via PyPI and supports at least Python 3.7.
+Our software is provided via PyPI and supports at least Python 3.9.
 
 ```
 pip3 install --pre connectivity-modifier # install prerelease version

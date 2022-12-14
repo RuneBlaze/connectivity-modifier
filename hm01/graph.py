@@ -84,7 +84,7 @@ class Graph:
         n = self.n()
         hydrator = [0] * n
         continuous_ids = nk.graphtools.getContinuousNodeIds(self._data).items()
-        assert len(continuous_ids) == n
+        assert len(continuous_ids) == n, f"Expected {n} ids, got {len(continuous_ids)}"
         for old_id, new_id in continuous_ids:
             hydrator[new_id] = old_id
         self.hydrator = hydrator

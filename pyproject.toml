@@ -9,7 +9,7 @@ authors = ["runeblaze <runeblaze@excite.co.jp>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 networkit = "^10.0"
 pytest = "^7.1.3"
 numpy = "^1.23.3"
