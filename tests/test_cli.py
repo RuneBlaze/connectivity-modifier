@@ -1,6 +1,7 @@
 from hm01.graph import Graph
 from hm01.cm import MincutRequirement, algorithm_g
 from hm01.clusterers.ikc_wrapper import IkcClusterer
+from hm01.clusterers.leiden_wrapper import LeidenClusterer
 
 def test_mincut_requirement_parsing():
     assert MincutRequirement(1,0,0,0) == MincutRequirement.try_from_str("1log10")
@@ -14,12 +15,12 @@ def test_mincut_requirement_parsing():
 def test_simple_algorithm_g(context):
     # FIXME: this is a flaky test. With low probability, it fails.
     graph = Graph.from_erdos_renyi(100, 0.8)
-    clusterer = IkcClusterer(1)
-    clusters = list(clusterer.cluster(graph))
-    clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())
-    assert len(clusters) >= 0
-    assert tree.root.num_children() >= 0
-    assert sum(1 for n in tree.traverse_postorder() if n.extant) == len(clusters)
+    for clusterer in [IkcClusterer(1), LeidenClusterer(0.1)]:
+        clusters = list(clusterer.cluster(graph))
+        clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())
+        assert len(clusters) >= 0
+        assert tree.root.num_children() >= 0
+        assert sum(1 for n in tree.traverse_postorder() if n.extant) == len(clusters)
 
 def test_concrete_graph_same(context):
     for _ in range(10):

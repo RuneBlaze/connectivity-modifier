@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Dict, Iterator, List
-from hm01.graph import Graph, IntangibleSubgraph
+from typing import Dict, Iterator, List, Union
+from hm01.graph import Graph, IntangibleSubgraph, RealizedSubgraph
 from hm01.clusterers.abstract_clusterer import AbstractClusterer
 from enum import Enum
 import leidenalg as la
@@ -16,7 +16,7 @@ class LeidenClusterer(AbstractClusterer):
     resolution: float
     quality: Quality = Quality.cpm
 
-    def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
+    def cluster(self, graph: Union[Graph, RealizedSubgraph]) -> Iterator[IntangibleSubgraph]:
         g = graph.to_igraph()
         if self.quality == Quality.cpm:
             partition = la.find_partition(

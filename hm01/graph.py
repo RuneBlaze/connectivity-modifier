@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing_extensions import Self
 import networkit as nk
@@ -10,11 +11,24 @@ from . import mincut
 from .context import context
 from structlog import get_logger
 from functools import cache, cached_property
+from typing import Protocol
 
 log = get_logger()
 
 
-class Graph:
+class AbstractGraph:
+    hydrator : List[int]
+
+    # @abstractmethod
+    def intangible_subgraph(self, nodes: List[int], suffix: str) -> IntangibleSubgraph:
+        raise NotImplementedError
+
+    def intangible_subgraph_from_compact(self, ids: List[int], suffix: str):
+        """Create an intangible subgraph from a list of ids that represent nodes in the compacted (i.e., made continuous) graph
+        """
+        return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
+
+class Graph(AbstractGraph):
     """Wrapped graph over a networkit graph with an ID label"""
 
     def __init__(self, data, index):
@@ -105,13 +119,8 @@ class Graph:
     def induced_subgraph_from_compact(self, ids: List[int], suffix: str):
         return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
 
-    def intangible_subgraph(self, nodes: List[int], suffix: str):
+    def intangible_subgraph(self, nodes: List[int], suffix: str) -> IntangibleSubgraph:
         return IntangibleSubgraph(nodes, self.index + suffix)
-
-    def intangible_subgraph_from_compact(self, ids: List[int], suffix: str):
-        """Create an intangible subgraph from a list of ids that represent nodes in the compacted (i.e., made continuous) graph
-        """
-        return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
 
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
@@ -179,7 +188,7 @@ class Graph:
         return ig.Graph(self.n(), edges)
 
 
-class RealizedSubgraph:
+class RealizedSubgraph(AbstractGraph):
     hydrator: List[int]  # mapping from compact id to original id
     inv: Dict[int, int]  # mapping from original id to compact id
     compacted: List[List[int]]
