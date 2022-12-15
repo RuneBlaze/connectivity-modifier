@@ -142,6 +142,16 @@ poetry install # install networkit and co
 poetry run pytest # run tests
 ```
 
+## Psuedocode
+
+Assuming that we have an existing clustering method $f$ that takes in a graph and outputs a list of clusters, our algorithm roughly does the following:
+
+ 1. Obtain clusters $\{S_i\}$ from $f$ if not provided in the input.
+ 2. Initiate a queue $Q$ containing all above clusters (the queue meant that everything is done in a BFS fashion)
+ 3. When $Q$ non-empty, take $S_i$ from $Q$. Do the following
+    - Calculate connectivity $\lambda$ for $S_i$
+    - If $\lambda > t$ for $S_i$, where $t$ is as specified by the `-t` parameter, then $S_i$ is marked for output, and we never touch $S_i$ again
+    - Otherwise. $S_i$ is split into $S_i^a$ and $S_i^b$ by the minimum cut, and $f(S_i^a)$ and $f(S_i^b)$ are added to $Q$.
 
 <!-- ## Algorithm
 ```
