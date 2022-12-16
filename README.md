@@ -150,7 +150,7 @@ Assuming that we have an existing clustering method $f$ that takes in a graph an
  2. Initiate a **stack** $Q$ containing all above clusters (the stack meant that everything is done in a DFS fashion)
  3. When $Q$ non-empty, take $S_i$ from $Q$. Do the following
     - Calculate connectivity $\lambda$ for $S_i$
-      - Done via `mincut -b -s -o mincut_info_path input_graph_path cactus` (where `mincut` is provided by Viecut)
+      - Done via `mincut -b -s -o [mincut_output_path] [input_graph_path] cactus` (where `mincut` is provided by Viecut)
     - If $\lambda > t$ for $S_i$, where $t$ is as specified by the `-t` parameter, then $S_i$ is marked for output, and we never touch $S_i$ again
     - Otherwise. $S_i$ is split into $S_i^a$ and $S_i^b$ by the minimum cut, and $f(S_i^a)$ and $f(S_i^b)$ are added to $Q$.
 
