@@ -48,6 +48,7 @@ class ClusteringSkeleton:
     nodes: List[int]
     connectivity: int
     descendants: List[str]
+    extant : bool
 
     @staticmethod
     def from_graphs(
@@ -70,6 +71,7 @@ class ClusteringSkeleton:
                     list(g.subset),
                     (info.cut_size or 1) if info else 1,
                     descendants,
+                    info.extant
                 )
             )
         ans.sort(key=lambda x: (len(x.descendants), len(x.nodes)), reverse=True)

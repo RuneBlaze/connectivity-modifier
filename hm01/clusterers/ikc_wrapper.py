@@ -9,7 +9,7 @@ import networkit as nk
 
 from hm01.clusterers.abstract_clusterer import AbstractClusterer
 
-from hm01.graph import Graph, IntangibleSubgraph
+from hm01.graph import Graph, IntangibleSubgraph, RealizedSubgraph
 from hm01.context import context
 
 
@@ -17,7 +17,7 @@ from hm01.context import context
 class IkcClusterer(AbstractClusterer):
     k: int
 
-    def cluster(self, graph: Graph) -> Iterator[IntangibleSubgraph]:
+    def cluster(self, graph: Union[Graph, RealizedSubgraph]) -> Iterator[IntangibleSubgraph]:
         """Returns a list of (labeled) subgraphs on the graph"""
         cluster_id = graph.index  # the cluster id such as 5a6b2
 
@@ -55,7 +55,7 @@ class IkcClusterer(AbstractClusterer):
             )
         # return retarr
 
-    def run_ikc(self, edge_list_path, graph: Graph, output_file):
+    def run_ikc(self, edge_list_path, graph: Union[Graph, RealizedSubgraph], output_file):
         """Runs IKC given an edge list and writes a CSV"""
         ikc_path = context.ikc_path
         stderr_p = context.request_graph_related_path(graph, "_ikc_k={self.k}.stderr")

@@ -14,7 +14,8 @@ def test_mincut_requirement_parsing():
 
 def test_simple_algorithm_g(context):
     # FIXME: this is a flaky test. With low probability, it fails.
-    graph = Graph.from_erdos_renyi(100, 0.8)
+    base = Graph.from_erdos_renyi(100, 0.8)
+    graph = base
     for clusterer in [IkcClusterer(1), LeidenClusterer(0.1)]:
         clusters = list(clusterer.cluster(graph))
         clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())

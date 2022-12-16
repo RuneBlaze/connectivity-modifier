@@ -95,14 +95,14 @@ def algorithm_g(
         annotate_tree_node(n, g)
         tree.root.add_child(n)
         node_mapping[g.index] = n
-    queue: Deque[IntangibleSubgraph] = deque(graphs)
-    log.info("starting algorithm-g", queue_size=len(queue))
+    stack: List[IntangibleSubgraph] = list(graphs)
+    log.info("starting algorithm-g", queue_size=len(stack))
     ans: List[IntangibleSubgraph] = []
     node2cids: Dict[int, str] = {}
-    while queue:
+    while stack:
         log = get_logger()
-        log.debug("entered next iteration of loop", queue_size=len(queue))
-        intangible_subgraph = queue.popleft()
+        log.debug("entered next iteration of loop", queue_size=len(stack))
+        intangible_subgraph = stack.pop()
         log.debug(
             "popped graph",
             graph_n=intangible_subgraph.n(),
@@ -171,8 +171,8 @@ def algorithm_g(
                     annotate_tree_node(n, sg)
                     node_mapping[sg.index] = n
                     np.add_child(n)
-            queue.extend(subp1)
-            queue.extend(subp2)
+            stack.extend(subp1)
+            stack.extend(subp2)
             log.info(
                 "cluster split",
                 num_a_side=len(subp1),

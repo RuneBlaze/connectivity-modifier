@@ -18,49 +18,38 @@ log = get_logger()
 
 class AbstractGraph:
     hydrator : List[int]
+    index : str
 
-    # @abstractmethod
     def intangible_subgraph(self, nodes: List[int], suffix: str) -> IntangibleSubgraph:
-        raise NotImplementedError
+        return IntangibleSubgraph(nodes, self.index + suffix)
+
+    @abstractmethod
+    def n(self) -> int:
+        pass
+
+    @abstractmethod
+    def m(self) -> int:
+        pass
+
+    @abstractmethod
+    def nodes(self) -> Iterator[int]:
+        pass
+
+    @abstractmethod
+    def degree(self, u) -> int:
+        pass
+
+    @abstractmethod
+    def neighbors(self, u) -> Iterator[int]:
+        pass
+
+    def degree_sequence(self) -> List[int]:
+        return sorted([self.degree(u) for u in self.nodes()])
 
     def intangible_subgraph_from_compact(self, ids: List[int], suffix: str):
         """Create an intangible subgraph from a list of ids that represent nodes in the compacted (i.e., made continuous) graph
         """
         return self.intangible_subgraph([self.hydrator[i] for i in ids], suffix)
-
-class Graph(AbstractGraph):
-    """Wrapped graph over a networkit graph with an ID label"""
-
-    def __init__(self, data, index):
-        self._data = data  # nk graph
-        self.index = index
-        self.construct_hydrator()
-
-    @staticmethod
-    def from_nk(graph, index=""):
-        """Create a wrapped graph from a networkit graph"""
-        return Graph(graph, index)
-
-    @staticmethod
-    def from_edgelist(path):
-        """Read a graph from an edgelist file"""
-        edgelist_reader = nk.graphio.EdgeListReader("\t", 0)
-        nk_graph = edgelist_reader.read(path)
-        return Graph.from_nk(nk_graph)
-
-    def n(self) -> int:
-        """Number of nodes"""
-        return self._data.numberOfNodes()
-
-    def m(self) -> int:
-        """Number of edges"""
-        return self._data.numberOfEdges()
-
-    @cache
-    def mcd(self) -> int:
-        if self.n() == 0:
-            return 0
-        return min(self._data.degree(n) for n in self._data.iterNodes())
 
     def find_clusters(
         self, clusterer: AbstractClusterer, with_singletons: bool = True
@@ -77,6 +66,48 @@ class Graph(AbstractGraph):
             return clusterer.cluster(self)
         else:
             return clusterer.cluster_without_singletons(self)
+
+class Graph(AbstractGraph):
+    """Wrapped graph over a networkit graph with an ID label"""
+
+    def __init__(self, data, index):
+        self._data = data  # nk graph
+        self.index = index
+        self.construct_hydrator()
+
+    def to_realized_subgraph(self):
+        return RealizedSubgraph(IntangibleSubgraph(list(range(self.n())), self.index), self)
+
+    @staticmethod
+    def from_nk(graph, index=""):
+        """Create a wrapped graph from a networkit graph"""
+        return Graph(graph, index)
+
+    @staticmethod
+    def from_edgelist(path):
+        """Read a graph from an edgelist file"""
+        edgelist_reader = nk.graphio.EdgeListReader("\t", 0)
+        nk_graph = edgelist_reader.read(path)
+        return Graph.from_nk(nk_graph)
+
+    @staticmethod
+    def from_metis(path):
+        metis_reader = nk.graphio.METISGraphReader()
+        return Graph.from_nk(metis_reader.read(path))
+        
+    def n(self) -> int:
+        """Number of nodes"""
+        return self._data.numberOfNodes()
+
+    def m(self) -> int:
+        """Number of edges"""
+        return self._data.numberOfEdges()
+
+    @cache
+    def mcd(self) -> int:
+        if self.n() == 0:
+            return 0
+        return min(self._data.degree(n) for n in self._data.iterNodes())
 
     def find_mincut(self) -> mincut.MincutResult:
         """Find a mincut wrapped over Viecut"""
@@ -118,9 +149,6 @@ class Graph(AbstractGraph):
 
     def induced_subgraph_from_compact(self, ids: List[int], suffix: str):
         return self.induced_subgraph([self.hydrator[i] for i in ids], suffix)
-
-    def intangible_subgraph(self, nodes: List[int], suffix: str) -> IntangibleSubgraph:
-        return IntangibleSubgraph(nodes, self.index + suffix)
 
     def as_compact_edgelist_filepath(self):
         """Get a filepath to the graph as a compact/continuous edgelist file"""
@@ -200,9 +228,7 @@ class RealizedSubgraph(AbstractGraph):
         self.nodeset = intangible.nodeset
         self.adj: Dict[int, set[int]] = {}
         self._graph = graph
-        for n in intangible.nodes():
-            if n not in self.nodeset:
-                continue
+        for n in self.nodeset:
             if n not in self.adj:
                 self.adj[n] = set()
             for m in graph.neighbors(n):
@@ -211,7 +237,6 @@ class RealizedSubgraph(AbstractGraph):
                 if m not in self.adj:
                     self.adj[m] = set()
                 self.adj[n].add(m)
-
         self._n = len(self.nodeset)
         self._m = sum(len(self.adj[n]) for n in self.nodeset) // 2
         self._dirty = True
@@ -223,8 +248,8 @@ class RealizedSubgraph(AbstractGraph):
         inv: Dict[int, int] = {}
         compacted: List[List[int]] = []
         for n in self.nodeset:
-            hydrator.append(n)
             if n not in inv:
+                hydrator.append(n)
                 inv[n] = unallocated
                 compacted.append([])
                 unallocated += 1
@@ -235,6 +260,7 @@ class RealizedSubgraph(AbstractGraph):
                     compacted.append([])
                     unallocated += 1
                 compacted[inv[n]].append(inv[m])
+        assert len(hydrator) == len(inv)
         self.hydrator = hydrator
         self.inv = inv
         self.compacted = compacted
@@ -316,6 +342,10 @@ class RealizedSubgraph(AbstractGraph):
         light = RealizedSubgraph(IntangibleSubgraph(mincut_res.light_partition, self.index + "a"), self._graph)
         heavy = RealizedSubgraph(IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"), self._graph)
         return light, heavy
+
+    @cached_property
+    def continuous_ids(self):
+        return self.inv
 
 @dataclass
 class IntangibleSubgraph:
