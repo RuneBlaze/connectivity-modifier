@@ -73,6 +73,7 @@ class Graph(AbstractGraph):
 
     def __init__(self, data, index):
         self._data = data  # nk graph
+        self._data.removeSelfLoops()
         self.index = index
         self.construct_hydrator()
 
@@ -276,7 +277,7 @@ class RealizedSubgraph(AbstractGraph):
     def to_intangible(self, graph):
         return IntangibleSubgraph(list(self.nodeset), self.index)
 
-    def remove_node(self, u):
+    def remove_node(self, u: int):
         self._n -= 1
         self._m -= len(self.adj[u])
         for v in self.adj[u]:
@@ -344,7 +345,7 @@ class RealizedSubgraph(AbstractGraph):
         heavy = RealizedSubgraph(IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"), self._graph)
         return light, heavy
 
-    @cached_property
+    # @cached_property
     def continuous_ids(self):
         return self.inv
 

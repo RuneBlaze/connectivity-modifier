@@ -25,7 +25,11 @@ def prune_graph(
         ):
             break
         for neighbor in graph.neighbors(node):
-            degrees[neighbor] -= 1
+            if neighbor in degrees:
+                degrees[neighbor] -= 1
+            else:
+                # TODO: this else case should be not needed, but still kept here for defensive programming
+                degrees[neighbor] = graph.degree(neighbor) - 1
         graph.remove_node(node)
         deleted_nodes += 1
     graph.mcd.cache_clear()
