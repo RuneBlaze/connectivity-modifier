@@ -15,7 +15,8 @@ from typing import Protocol
 
 log = get_logger()
 
-
+# TODO: AbstractGraph type should incorporate all duplicate code of all the Graph classes
+# Also, AbstractGraph should replace most of the Union[RealizedSubgraph, Graph] types
 class AbstractGraph:
     hydrator : List[int]
     index : str

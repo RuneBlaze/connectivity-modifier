@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MincutResult:
+    # FIXME: these are misnomers, "light_partition" is not guaranteed to have fewer nodes than "heavy_partition"
     light_partition: List[int]  # 0 labeled nodes
     heavy_partition: List[int]  # 1 labeled nodes
     cut_size: int

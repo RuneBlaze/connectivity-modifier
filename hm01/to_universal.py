@@ -89,7 +89,7 @@ class ClusteringSkeleton:
                     del d["descendants"]
                 f.write(json.dumps(d) + "\n")
 
-
+# TODO: arguments below should eventually be converted to Path types
 def main(
     input: str = typer.Option(..., "--input", "-i"),
     graph_path: str = typer.Option(..., "--graph", "-g"),
@@ -127,8 +127,8 @@ def main(
         graph, original_clusters, metadata
     )
     extant_skeletons = ClusteringSkeleton.from_graphs(graph, extant_clusters, metadata)
-    ClusteringSkeleton.write_ndjson(original_skeletons, output + ".original.json")
-    ClusteringSkeleton.write_ndjson(extant_skeletons, output + ".extant.json")
+    ClusteringSkeleton.write_ndjson(original_skeletons, output + ".before.json")
+    ClusteringSkeleton.write_ndjson(extant_skeletons, output + ".after.json")
 
 
 def entry_point():

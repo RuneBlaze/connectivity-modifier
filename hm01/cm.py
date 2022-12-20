@@ -216,13 +216,13 @@ def main(
     """Connectivity-Modifier (CM). Take a network and cluster it ensuring cut validity
     """
     if clusterer_spec == ClustererSpec.leiden:
-        assert resolution != -1
+        assert resolution != -1, "Leiden requires resolution"
         clusterer: Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
     elif clusterer_spec == ClustererSpec.leiden_mod:
         assert resolution == -1, "Leiden with modularity does not support resolution"
         clusterer = LeidenClusterer(resolution, quality=Quality.modularity)
     else:
-        assert k != -1
+        assert k != -1, "IKC requires k"
         clusterer = IkcClusterer(k)
     log = get_logger()
     context.with_working_dir(input + "_working_dir" if not working_dir else working_dir)
