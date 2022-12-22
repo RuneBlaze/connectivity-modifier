@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "connectivity-modifier"
-version = "0.1.0b4"
+version = "0.1.0b5"
 description = "connectivity modifier"
 packages = [
 	{ include = "hm01" }
