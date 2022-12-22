@@ -345,7 +345,7 @@ class RealizedSubgraph(AbstractGraph):
         heavy = RealizedSubgraph(IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"), self._graph)
         return light, heavy
 
-    # @cached_property
+    @property
     def continuous_ids(self):
         return self.inv
 
