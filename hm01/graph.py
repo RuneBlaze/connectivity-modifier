@@ -347,6 +347,8 @@ class RealizedSubgraph(AbstractGraph):
 
     @property
     def continuous_ids(self):
+        if self._dirty:
+            self.recompact()
         return self.inv
 
 @dataclass
