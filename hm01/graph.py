@@ -331,7 +331,8 @@ class RealizedSubgraph(AbstractGraph):
         with open(p, "w+") as f:
             for u, adj in enumerate(self.compacted):
                 for v in adj:
-                    f.write(f"{u}\t{v}")
+                    if u < v:
+                        f.write(f"{u}\t{v}")
         return p
 
     def find_mincut(self) -> mincut.MincutResult:
