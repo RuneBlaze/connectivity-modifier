@@ -329,9 +329,9 @@ class RealizedSubgraph(AbstractGraph):
             self.recompact()
         p = context.request_graph_related_path(self, "edgelist")
         with open(p, "w+") as f:
-            for u in self.compacted:
-                for i, v in enumerate(u):
-                    f.write(f"{i}\t{v}")
+            for u, adj in enumerate(self.compacted):
+                for v in adj:
+                    f.write(f"{u}\t{v}")
         return p
 
     def find_mincut(self) -> mincut.MincutResult:
