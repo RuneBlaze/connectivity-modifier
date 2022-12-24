@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import json
 from structlog import get_logger
+import sys
 
 from hm01.graph import Graph, IntangibleSubgraph
 from hm01.cm import ClusterTreeNode
@@ -96,6 +97,7 @@ def main(
     output: str = typer.Option(..., "--output_prefix", "-o"),
 ):
     """Compute two sets of statistics for a hiearchical clustering"""
+    sys.setrecursionlimit(1231231234)
     log = get_logger()
     assert os.path.exists(input)
     treepath = input + ".tree.json"
