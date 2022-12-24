@@ -19,6 +19,7 @@ from .clusterers.ikc_wrapper import IkcClusterer
 from .context import context
 from .mincut_requirement import MincutRequirement
 from .pruner import prune_graph
+import sys
 
 
 class ClustererSpec(str, Enum):
@@ -215,6 +216,7 @@ def main(
 ):
     """Connectivity-Modifier (CM). Take a network and cluster it ensuring cut validity
     """
+    sys.setrecursionlimit(1231231234)
     if clusterer_spec == ClustererSpec.leiden:
         assert resolution != -1, "Leiden requires resolution"
         clusterer: Union[LeidenClusterer, IkcClusterer] = LeidenClusterer(resolution)
