@@ -58,8 +58,8 @@ class IkcClusterer(AbstractClusterer):
     def run_ikc(self, edge_list_path, graph: Union[Graph, RealizedSubgraph], output_file):
         """Runs IKC given an edge list and writes a CSV"""
         ikc_path = context.ikc_path
-        stderr_p = context.request_graph_related_path(graph, "_ikc_k={self.k}.stderr")
-        stdout_p = context.request_graph_related_path(graph, "_ikc_k={self.k}.stdout")
+        stderr_p = context.request_graph_related_path(graph, f"_ikc_k={self.k}.stderr")
+        stdout_p = context.request_graph_related_path(graph, f"_ikc_k={self.k}.stdout")
         with open(stderr_p, "w") as f_err:
             with open(stdout_p, "w") as f_out:
                 subprocess.run(
