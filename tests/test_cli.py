@@ -18,7 +18,7 @@ def test_simple_algorithm_g(context):
     graph = base
     for clusterer in [IkcClusterer(1), LeidenClusterer(0.1)]:
         clusters = list(clusterer.cluster(graph))
-        clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent())
+        clusters, label_mapping, tree = algorithm_g(graph, clusters, clusterer, MincutRequirement.most_stringent(), None)
         assert len(clusters) >= 0
         assert tree.root.num_children() >= 0
         assert sum(1 for n in tree.traverse_postorder() if n.extant) == len(clusters)

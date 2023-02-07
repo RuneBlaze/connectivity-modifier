@@ -20,6 +20,8 @@ from .context import context
 from .mincut_requirement import MincutRequirement
 from .pruner import prune_graph
 import sys
+import sqlite3
+import pickle as pkl
 
 
 class ClustererSpec(str, Enum):
@@ -78,28 +80,60 @@ class ClusterTreeNode(ts.Node):
     cut_size: Optional[int]
     validity_threshold: Optional[float]
 
+@dataclass
+class Checkpoint:
+    tree : ts.Tree
+    node2cids : Dict[int, str]
+    node_mapping : Dict[str, ClusterTreeNode]
+    stack : List[IntangibleSubgraph]
+    ans : List[IntangibleSubgraph]
+
+    @staticmethod
+    def load() -> Optional[Checkpoint]:
+        latest_checkpoint_path = context.find_latest_checkpoint()
+        if not latest_checkpoint_path:
+            return None
+        try:
+            with open(latest_checkpoint_path, "rb") as f:
+                return pkl.load(f)
+        except FileNotFoundError:
+            return None
+    
+    def save(self):
+        with open(context.request_subpath(f"checkpoint.{int(time.time())}.pkl"), "wb") as f:
+            pkl.dump(self, f)
 
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
+    checkpoint : Optional[Checkpoint] = None,
     filterer: ClusterIgnoreFilter = ClusterIgnoreFilter.default(),
 ) -> Tuple[List[IntangibleSubgraph], Dict[int, str], ts.Tree]:
     log = get_logger()
-    tree = ts.Tree()
-    tree.root = ClusterTreeNode()
-    annotate_tree_node(tree.root, global_graph)
-    node_mapping: Dict[str, ClusterTreeNode] = {}
-    for g in graphs:
-        n = ClusterTreeNode()
-        annotate_tree_node(n, g)
-        tree.root.add_child(n)
-        node_mapping[g.index] = n
-    stack: List[IntangibleSubgraph] = list(graphs)
+    if not checkpoint:
+        tree = ts.Tree()
+        tree.root = ClusterTreeNode()
+        annotate_tree_node(tree.root, global_graph)
+        node_mapping: Dict[str, ClusterTreeNode] = {}
+        for g in graphs:
+            n = ClusterTreeNode()
+            annotate_tree_node(n, g)
+            tree.root.add_child(n)
+            node_mapping[g.index] = n
+        stack: List[IntangibleSubgraph] = list(graphs)
+        ans: List[IntangibleSubgraph] = []
+        node2cids: Dict[int, str] = {}
+    else:
+        tree = checkpoint.tree
+        node_mapping = checkpoint.node_mapping
+        stack = checkpoint.stack
+        ans = checkpoint.ans
+        node2cids = checkpoint.node2cids
+        log.info("loaded checkpoint")
     log.info("starting algorithm-g", queue_size=len(stack))
-    ans: List[IntangibleSubgraph] = []
-    node2cids: Dict[int, str] = {}
+    last_checkpoint_time = time.time()
     while stack:
         log = get_logger()
         log.debug("entered next iteration of loop", queue_size=len(stack))
@@ -196,6 +230,11 @@ def algorithm_g(
                     "cut valid, but modularity non-positive, thrown away",
                     modularity=mod,
                 )
+        if time.time() - last_checkpoint_time > 3600 * 2:
+            last_checkpoint_time = time.time()
+            log.info("checkpointing")
+            checkpoint = Checkpoint(tree, node2cids, node_mapping, ans, stack)
+            checkpoint.save()
     return ans, node2cids, tree
 
 
@@ -262,7 +301,7 @@ def main(
         summary=summarize_graphs(clusters),
     )
     new_clusters, labels, tree = algorithm_g(
-        root_graph, clusters, clusterer, requirement, filterer
+        root_graph, clusters, clusterer, requirement, Checkpoint.load(), filterer
     )
     with open(output, "w+") as f:
         for n, cid in labels.items():

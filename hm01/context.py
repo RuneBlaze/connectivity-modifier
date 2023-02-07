@@ -1,4 +1,6 @@
 from functools import cached_property
+import glob
+from typing import Optional
 from tomli import load
 import os
 import atexit
@@ -65,6 +67,15 @@ class Context:
             self.working_dir,
             hashlib.sha256(graph.index.encode("utf-8")).hexdigest()[:10] + "." + suffix,
         )
+
+    def request_subpath(self, suffix) -> str:
+        return os.path.join(self.working_dir, suffix)
+
+    def find_latest_checkpoint(self) -> Optional[str]:
+        checkpoints = glob.glob(os.path.join(self.working_dir, "*.pkl"))
+        if not checkpoints:
+            return None
+        return max(checkpoints, key=os.path.getctime)
 
 
 # we export the context as a singleton
