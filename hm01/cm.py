@@ -235,6 +235,7 @@ def algorithm_g(
             log.info("checkpointing")
             checkpoint = Checkpoint(tree, node2cids, node_mapping, ans, stack)
             checkpoint.save()
+            log.info("checkpoint saved")
     return ans, node2cids, tree
 
 

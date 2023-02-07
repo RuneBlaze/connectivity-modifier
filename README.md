@@ -142,6 +142,10 @@ poetry install # install networkit and co
 poetry run pytest # run tests
 ```
 
+## Other features
+
+As of the latest version, `cm` supports checkpointing (experimental) every two hours.
+
 ## Pseudocode
 
 Assuming that we have an existing clustering method $f$ that takes in a graph and outputs a list of clusters, our algorithm roughly does the following:
