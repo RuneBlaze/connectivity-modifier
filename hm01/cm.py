@@ -20,7 +20,6 @@ from .context import context
 from .mincut_requirement import MincutRequirement
 from .pruner import prune_graph
 import sys
-import sqlite3
 import pickle as pkl
 
 
@@ -54,7 +53,7 @@ class ClusterIgnoreFilter:
     ignore_smaller_than: int
 
     def __call__(self, cluster: IntangibleSubgraph, global_graph: Graph) -> bool:
-        if self.ignore_trees and cluster.is_tree_like(global_graph) == 1:
+        if self.ignore_trees and cluster.is_tree_like(global_graph):
             return True
         if self.ignore_smaller_than > 0 and cluster.n() < self.ignore_smaller_than:
             return True

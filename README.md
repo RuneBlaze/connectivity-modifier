@@ -124,14 +124,14 @@ The default output of `cm` contains the entire history of the execution of the a
 cm2universal -g INPUT_GRAPH -i CM_OUTPUT_PREFIX -o CLUSTERS_OUTPUT_PREFIX
 ```
 
-Two files will be generated: `{CLUSTERS_OUTPUT_PREFIX}.before.json` and `{CLUSTERS_OUTPUT_PREFIX}.after.json`, containing the original and after clusters respectively. The `json` files use the so-called "universal" new-line delimited JSON format, looking like this:
+Two files will be generated: `{CLUSTERS_OUTPUT_PREFIX}.before.json` and `{CLUSTERS_OUTPUT_PREFIX}.after.json`, containing the original and after clusters respectively. The `json` files use the so-called "universal" [JSONL](https://jsonlines.org/) format, looking like this:
 
 ```json
 {"label": "0", "nodes": [0, 3, 7, 9], "connectivity": 1}
 {"label": "46", "nodes": [5765736, 4717164, 14154348, 3144303, 6290035, 3668596, 1571445, 2620022, 4717176], "connectivity": 2}
 ```
 
-These files can be directly parsed (each line is a cluster, `label` the cluster name, `nodes` the node ids of that cluster, `connectivity` the edge connectivity) or can be paired with the data science tool [Belinda](https://github.com/illinois-or-research-analytics/belinda).
+These files can be directly parsed (each line is a cluster, `label` the cluster name, `nodes` the node ids of that cluster, `connectivity` the upper bound on the edge connectivity) or can be paired with the data science tool [Belinda](https://github.com/RuneBlaze/belinda).
 
 ## Development
 
