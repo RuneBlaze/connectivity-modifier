@@ -36,7 +36,7 @@ cm = 'hm01.cm:entry_point'
 cm2universal = 'hm01.to_universal:entry_point'
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^0.982"
+mypy = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core"]
