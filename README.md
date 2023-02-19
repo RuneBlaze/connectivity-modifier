@@ -142,6 +142,8 @@ poetry install # install networkit and co
 poetry run pytest # run tests
 ```
 
+Also, we use [pre-commit](https://pre-commit.com/) hooks to ensure that the code is formatted properly.
+
 ## Other features
 
 As of the latest version, `cm` supports checkpointing (experimental) every two hours.
