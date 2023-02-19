@@ -247,7 +247,7 @@ class RealizedSubgraph(AbstractGraph):
         self._dirty = True
         # self.recompact()
 
-    def recompact(self):
+    def recompact(self) -> None:
         unallocated = 0
         hydrator: List[int] = []
         inv: Dict[int, int] = {}
@@ -280,7 +280,7 @@ class RealizedSubgraph(AbstractGraph):
     def to_intangible(self, graph):
         return IntangibleSubgraph(list(self.nodeset), self.index)
 
-    def remove_node(self, u: int):
+    def remove_node(self, u: int) -> None:
         self._n -= 1
         self._m -= len(self.adj[u])
         for v in self.adj[u]:
@@ -289,13 +289,13 @@ class RealizedSubgraph(AbstractGraph):
         self.nodeset.remove(u)
         self._dirty = True
 
-    def n(self):
+    def n(self) -> int:
         return self._n
 
-    def m(self):
+    def m(self) -> int:
         return self._m
 
-    def nodes(self):
+    def nodes(self) -> Iterator[int]:
         yield from self.nodeset
 
     @cache
@@ -317,7 +317,7 @@ class RealizedSubgraph(AbstractGraph):
                 edges.append((self.inv[u], self.inv[v]))
         return ig.Graph(self.n(), edges)
 
-    def as_metis_filepath(self):
+    def as_metis_filepath(self) -> str:
         if self._dirty:
             self.recompact()
         p = context.request_graph_related_path(self, "metis")
@@ -327,7 +327,7 @@ class RealizedSubgraph(AbstractGraph):
                 f.write(" ".join([str(v + 1) for v in u]) + "\n")
         return p
 
-    def as_compact_edgelist_filepath(self):
+    def as_compact_edgelist_filepath(self) -> str:
         if self._dirty:
             self.recompact()
         p = context.request_graph_related_path(self, "edgelist")
