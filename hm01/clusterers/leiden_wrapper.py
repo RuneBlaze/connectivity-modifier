@@ -16,7 +16,9 @@ class LeidenClusterer(AbstractClusterer):
     resolution: float
     quality: Quality = Quality.cpm
 
-    def cluster(self, graph: Union[Graph, RealizedSubgraph]) -> Iterator[IntangibleSubgraph]:
+    def cluster(
+        self, graph: Union[Graph, RealizedSubgraph]
+    ) -> Iterator[IntangibleSubgraph]:
         g = graph.to_igraph()
         if self.quality == Quality.cpm:
             partition = la.find_partition(

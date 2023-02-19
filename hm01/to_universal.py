@@ -49,7 +49,7 @@ class ClusteringSkeleton:
     nodes: List[int]
     connectivity: int
     descendants: List[str]
-    extant : bool
+    extant: bool
 
     @staticmethod
     def from_graphs(
@@ -72,7 +72,7 @@ class ClusteringSkeleton:
                     list(g.subset),
                     (info.cut_size or 1) if info else 1,
                     descendants,
-                    info.extant
+                    info.extant,
                 )
             )
         ans.sort(key=lambda x: (len(x.descendants), len(x.nodes)), reverse=True)
@@ -89,6 +89,7 @@ class ClusteringSkeleton:
                 if not use_descendants:
                     del d["descendants"]
                 f.write(json.dumps(d) + "\n")
+
 
 # TODO: arguments below should eventually be converted to Path types
 def main(

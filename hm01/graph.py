@@ -18,8 +18,8 @@ log = get_logger()
 # TODO: AbstractGraph type should incorporate all duplicate code of all the Graph classes
 # Also, AbstractGraph should replace most of the Union[RealizedSubgraph, Graph] types
 class AbstractGraph:
-    hydrator : List[int]
-    index : str
+    hydrator: List[int]
+    index: str
 
     def intangible_subgraph(self, nodes: List[int], suffix: str) -> IntangibleSubgraph:
         return IntangibleSubgraph(nodes, self.index + suffix)
@@ -68,6 +68,7 @@ class AbstractGraph:
         else:
             return clusterer.cluster_without_singletons(self)
 
+
 class Graph(AbstractGraph):
     """Wrapped graph over a networkit graph with an ID label"""
 
@@ -78,7 +79,9 @@ class Graph(AbstractGraph):
         self.construct_hydrator()
 
     def to_realized_subgraph(self):
-        return RealizedSubgraph(IntangibleSubgraph(list(range(self.n())), self.index), self)
+        return RealizedSubgraph(
+            IntangibleSubgraph(list(range(self.n())), self.index), self
+        )
 
     @staticmethod
     def from_nk(graph, index=""):
@@ -96,7 +99,7 @@ class Graph(AbstractGraph):
     def from_metis(path):
         metis_reader = nk.graphio.METISGraphReader()
         return Graph.from_nk(metis_reader.read(path))
-        
+
     def n(self) -> int:
         """Number of nodes"""
         return self._data.numberOfNodes()
@@ -321,7 +324,7 @@ class RealizedSubgraph(AbstractGraph):
         with open(p, "w+") as f:
             f.write(f"{self.n()} {self.m()}\n")
             for u in self.compacted:
-                f.write(" ".join([str(v+1) for v in u]) + "\n")
+                f.write(" ".join([str(v + 1) for v in u]) + "\n")
         return p
 
     def as_compact_edgelist_filepath(self):
@@ -342,8 +345,14 @@ class RealizedSubgraph(AbstractGraph):
         self, mincut_res: mincut.MincutResult
     ) -> Tuple[Union[Graph, RealizedSubgraph], Union[Graph, RealizedSubgraph]]:
         """Cut the graph by the mincut result"""
-        light = RealizedSubgraph(IntangibleSubgraph(mincut_res.light_partition, self.index + "a"), self._graph)
-        heavy = RealizedSubgraph(IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"), self._graph)
+        light = RealizedSubgraph(
+            IntangibleSubgraph(mincut_res.light_partition, self.index + "a"),
+            self._graph,
+        )
+        heavy = RealizedSubgraph(
+            IntangibleSubgraph(mincut_res.heavy_partition, self.index + "b"),
+            self._graph,
+        )
         return light, heavy
 
     @property
@@ -351,6 +360,7 @@ class RealizedSubgraph(AbstractGraph):
         if self._dirty:
             self.recompact()
         return self.inv
+
 
 @dataclass
 class IntangibleSubgraph:

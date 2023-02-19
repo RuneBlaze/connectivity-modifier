@@ -79,13 +79,14 @@ class ClusterTreeNode(ts.Node):
     cut_size: Optional[int]
     validity_threshold: Optional[float]
 
+
 @dataclass
 class Checkpoint:
-    tree : ts.Tree
-    node2cids : Dict[int, str]
-    node_mapping : Dict[str, ClusterTreeNode]
-    stack : List[IntangibleSubgraph]
-    ans : List[IntangibleSubgraph]
+    tree: ts.Tree
+    node2cids: Dict[int, str]
+    node_mapping: Dict[str, ClusterTreeNode]
+    stack: List[IntangibleSubgraph]
+    ans: List[IntangibleSubgraph]
 
     @staticmethod
     def load() -> Optional[Checkpoint]:
@@ -97,17 +98,20 @@ class Checkpoint:
                 return pkl.load(f)
         except FileNotFoundError:
             return None
-    
+
     def save(self):
-        with open(context.request_subpath(f"checkpoint.{int(time.time())}.pkl"), "wb") as f:
+        with open(
+            context.request_subpath(f"checkpoint.{int(time.time())}.pkl"), "wb"
+        ) as f:
             pkl.dump(self, f)
+
 
 def algorithm_g(
     global_graph: Graph,
     graphs: List[IntangibleSubgraph],
     clusterer: Union[IkcClusterer, LeidenClusterer],
     requirement: MincutRequirement,
-    checkpoint : Optional[Checkpoint] = None,
+    checkpoint: Optional[Checkpoint] = None,
     filterer: ClusterIgnoreFilter = ClusterIgnoreFilter.default(),
 ) -> Tuple[List[IntangibleSubgraph], Dict[int, str], ts.Tree]:
     log = get_logger()
